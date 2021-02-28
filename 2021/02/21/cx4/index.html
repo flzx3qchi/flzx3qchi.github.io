@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    操作系统真象还原&lt;第四部分&gt; |  Hexo
+  </title>
+  <meta name="generator" content="hexo-theme-yilia-plus">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+  
+  
+
+  
+
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    <main class="content on">
+      <section class="outer">
+  <article id="post-cx4" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  操作系统真象还原&lt;第四部分&gt;
+</h1>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/02/21/cx4/" class="article-date">
+  <time datetime="2021-02-20T16:00:00.000Z" itemprop="datePublished">2021-02-21</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">操作系统</a>
+  </div>
+
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">9k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">38 min</span>
+        </span>
+    </span>
+</div>
+
+      
+    </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>(｡･∀･)ﾉﾞ嗨起来！！！</p>
+<a id="more"></a>
+
+<h1 id="完善内核"><a href="#完善内核" class="headerlink" title="完善内核"></a>完善内核</h1><h2 id="调用约定"><a href="#调用约定" class="headerlink" title="调用约定"></a>调用约定</h2><p> 调用约定主要体现在以下三方面：</p>
+<ol>
+<li>参数的传递方式，参数是存放在寄存器中还是栈中</li>
+<li>参数的传递顺序，是从左到右传递还是从右到左传递</li>
+<li>是调用者保存寄存器环境还是被调用者保存</li>
+</ol>
+<p>有如下常见的调用约定，我们主要关注cdecl、stdcall、thiscall即可</p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190602426/0" alt="image-20210122113800177"></p>
+<p>为 C 语言遵循的调用约定是 cdecl 。stdcall与之对比。</p>
+<h3 id="stdcall-调用约定"><a href="#stdcall-调用约定" class="headerlink" title="stdcall 调用约定"></a><strong>stdcall 调用约定</strong></h3><p>stdcall 的调用约定意味着</p>
+<blockquote>
+<p>（1）调用者将所有参数从右向左入栈。</p>
+<p>（2）被调用者清理参数所占的栈空间。 </p>
+</blockquote>
+<p><strong>例子</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">subtract(<span class="keyword">int</span> a, <span class="keyword">int</span> b) &#123; <span class="comment">//被调用者</span></span><br><span class="line"> <span class="keyword">return</span> a-b; </span><br><span class="line">&#125; </span><br><span class="line"><span class="keyword">int</span> sub = subtract(<span class="number">3</span>,<span class="number">2</span>); <span class="comment">//主调用者</span></span><br><span class="line"><span class="comment">//函数 subtract 返回 a 减 b 的差，这里只要代入实参</span></span><br></pre></td></tr></table></figure>
+
+<p>在 stdcall 调用约定下，这个 c 代码被编译后的汇编语句是：</p>
+<p>主调用者：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">; 从右到左将参数入栈</span><br><span class="line">push 2 ;压入参数 b </span><br><span class="line">push 3 ;压入参数 a </span><br><span class="line">call subtract ;调用函数 subtract</span><br></pre></td></tr></table></figure>
+
+<p>被调用者：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">push ebp ;压入 ebp 备份</span><br><span class="line">mov ebp,esp ;将 esp 赋值给 ebp </span><br><span class="line">; 用 ebp 作为基址来访问栈中参数</span><br><span class="line">mov eax,[ebp+0x8] ;偏移 8 字节处为第 1 个参数 a </span><br><span class="line">add eax,[ebp+0xc] ;偏移 0xc 字节处是第 2 个参数 b </span><br><span class="line">; 参数 a 和 b 相加后存入 eax </span><br><span class="line">mov esp,ebp ;为防止中间有入栈操作,用 ebp 恢复 esp </span><br><span class="line">; 本句在此例子中可有可无,属于通用代码</span><br><span class="line">pop ebp ;将 ebp 恢复</span><br><span class="line">ret 8 ;数字 8 表示返回后使 esp+8 </span><br><span class="line">; 函数返回时由被调函数清理了栈中参数</span><br></pre></td></tr></table></figure>
+
+<p>当执行流进入到 subtract 后，在它的内部为了用 ebp 作为基址引用栈中参数，先执行了 push ebp 来备份 ebp，再将栈指针赋给了 ebp。</p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190602449/0" alt="image-20210123103020130"></p>
+<p>stdcall 是被调用者负责清理栈空间，这里的被调用者是函数 subtract。</p>
+<p>也就是说，subtract 需要在返回前或返回时完成。在返回前清理栈相对困难一些，清理栈是指将栈顶回退到参数之前。因为返回地址在参数之下，ret 指令执行时必须保证当前栈顶是返回地址。所以通常在返回时“顺便”完成。于是 ret 指令便有了这样的变体。</p>
+<p>其格式为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ret 16 位立即数</span><br></pre></td></tr></table></figure>
+
+<p>stdcall 是调用者在栈中压入参数，由被调用者回收栈空间。貌似分工很明确，配合很默契。因为被调用者知道自己需要几个参数，所以知道要回收多少栈空间。</p>
+<h3 id="cdecl-调用约定"><a href="#cdecl-调用约定" class="headerlink" title="cdecl 调用约定"></a><strong>cdecl 调用约定</strong></h3><p>cdecl 调用约定由于起源于 C 语言，所以又称为 C 调用约定，是 C 语言默认的调用约定。</p>
+<p>cdecl 的调用约定意味着</p>
+<blockquote>
+<p>（1）调用者将所有参数从右向左入栈。</p>
+<p>（2）调用者清理参数所占的栈空间。</p>
+</blockquote>
+<p>很容易发现它和 stdcall 一样都是从右向左将参数入栈的，区别就是 cdecl 由调用者清理栈空间。</p>
+<p>例子同上</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">subtract(<span class="keyword">int</span> a, <span class="keyword">int</span> b) &#123; <span class="comment">//被调用者</span></span><br><span class="line"> <span class="keyword">return</span> a-b; </span><br><span class="line">&#125; </span><br><span class="line"><span class="keyword">int</span> sub = subtract(<span class="number">3</span>,<span class="number">2</span>); <span class="comment">//主调用者</span></span><br><span class="line"><span class="comment">//函数 subtract 返回 a 减 b 的差，这里只要代入实参</span></span><br></pre></td></tr></table></figure>
+
+<p>主调用者：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">; 从右到左将参数入栈</span><br><span class="line">push 2 ;压入参数 b </span><br><span class="line">push 3 ;压入参数 a </span><br><span class="line">call subtract ;调用函数 subtract </span><br><span class="line">add esp, 8 ;回收（清理）栈空间</span><br></pre></td></tr></table></figure>
+
+<p>被调用者：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">push ebp ;压入 ebp 备份</span><br><span class="line">mov ebp,esp ;将 esp 赋值给 ebp </span><br><span class="line">; 用 ebp 作为基址来访问栈中参数</span><br><span class="line">mov eax,[ebp+0x8] ;偏移 8 字节处为第 1 个参数 a </span><br><span class="line">add eax,[ebp+0xc] ;偏移 0xc 字节处是第 2 个参数 b </span><br><span class="line">; 参数 a 和 b 相加后存入 eax </span><br><span class="line">mov esp,ebp ;为防止中间有入栈操作，用 ebp 恢复 esp </span><br><span class="line">; 本句在此例子中可有可无,属于通用代码</span><br><span class="line">pop ebp ;将 ebp 恢复</span><br><span class="line">ret</span><br></pre></td></tr></table></figure>
+
+<p>和 stdcall 相比，在 cdecl 调用约定下生成的汇编代码，就是在被调用者中的回收栈空间操作挪到了主调用者中，</p>
+<p>在主调用者代码中的第 4 行，通过将 esp 加上 8 字节的方式回收了参数 a 和参数 b，本例中的其他代码都和 stdcall 一样。</p>
+<h2 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h2><p>汇编语言和 C 语言混合编程可分为两大类。</p>
+<blockquote>
+<p>（1）单独的汇编代码文件与单独的 C 语言文件分别编译成目标文件后，一起链接成可执行程序。</p>
+<p>（2）在 C 语言中嵌入汇编代码，直接编译生成可执行程序。</p>
+</blockquote>
+<p>为了更加理解系统调用，在后面会更频繁的结合C和汇编进行操作，下面做一个实验，分别用三种方式调用write函数，模拟下面C调用库函数的过程。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="built_in">write</span>(<span class="number">1</span>,<span class="string">"hello,world\n"</span>,<span class="number">4</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>为了使用 c 标准库中的 write 函数，文件开头包含了标准头文件 unistd.h，通过该函数可以使用系统的 write 系统调用，该文件在磁盘上的路径是/usr/include/unistd.h。</p>
+<p>调用“系统调用”有两种方式。</p>
+<blockquote>
+<p>（1）将系统调用指令封装为 c 库函数，通过库函数进行系统调用，操作简单。</p>
+<p>（2）不依赖任何库函数，直接通过汇编指令 int 与操作系统通信。</p>
+</blockquote>
+<p>这里介绍第二种</p>
+<p>eax 寄存器用来存储子功能号（寄存器 eip、ebp、esp 是不能使用的）。5 个参数存放在以下寄存器中，</p>
+<p>传送参数的顺序如下。</p>
+<blockquote>
+<p>（1）ebx 存储第 1 个参数。</p>
+<p>（2）ecx 存储第 2 个参数。</p>
+<p>（3）edx 存储第 3 个参数。</p>
+<p>（4）esi 存储第 4 个参数。</p>
+<p>（5）edi 存储第 5 个参数。</p>
+</blockquote>
+<p>模拟代码<code>syscall_write.S</code>如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">section .data</span><br><span class="line">str_c_lib: db &quot;C library says: hello world!&quot;, 0xa ; 0xa为换行符</span><br><span class="line">str_c_lib_len equ $-str_c_lib</span><br><span class="line"></span><br><span class="line">str_syscall: db &quot;syscall says: hello world!&quot;, 0xa</span><br><span class="line">str_syscall_len equ $-str_syscall</span><br><span class="line"></span><br><span class="line">section .text</span><br><span class="line">global _start</span><br><span class="line">_start:</span><br><span class="line">; ssize_t write(int fd,const void *buf,size_t count);</span><br><span class="line">; 方法一:模拟C语言中系统调用库函数write</span><br><span class="line">	push str_c_lib_len</span><br><span class="line">	push str_c_lib</span><br><span class="line">	push 1</span><br><span class="line">	</span><br><span class="line">	call my_write</span><br><span class="line">	add esp, 12</span><br><span class="line">	</span><br><span class="line">; 方法二:系统调用</span><br><span class="line">	mov eax, 4               ; 系统调用号</span><br><span class="line">	mov ebx, 1               ; fd</span><br><span class="line">	mov ecx, str_syscall     ; buf</span><br><span class="line">	mov edx, str_syscall_len ; count</span><br><span class="line">	int 0x80</span><br><span class="line">	</span><br><span class="line">; 退出程序</span><br><span class="line">	mov eax, 1 ; exit()</span><br><span class="line">	int 0x80</span><br><span class="line"></span><br><span class="line">; 下面模拟write系统调用</span><br><span class="line">my_write:</span><br><span class="line">	push ebp</span><br><span class="line">	mov ebp, esp</span><br><span class="line">	mov eax, 4</span><br><span class="line">	mov ebx, [ebp + 8]    ; fd</span><br><span class="line">	mov ecx, [ebp + 0xc]  ; buf</span><br><span class="line">	mov edx, [ebp + 0x10] ; count</span><br><span class="line">	int 0x80</span><br><span class="line">	pop ebp</span><br><span class="line">	ret</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">nasm -f elf -o syscall_write.o syscall_write.S</span><br><span class="line">ld -m elf_i386 -o syscall_write.bin syscall_write.o</span><br><span class="line">.&#x2F;syscall_write.bin</span><br></pre></td></tr></table></figure>
+
+<p>运行结果如下</p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190602470/0" alt="image-20210210184907607"> </p>
+<p>开始第二个实验</p>
+<p><strong>汇编语言和 C 语言共同协作</strong> </p>
+<p>调用关系如下图</p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190602490/0" alt="image-20210207155422249"></p>
+<p>C_with_S_c.c代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">extern void asm_print(char*,int);</span><br><span class="line">void c_print(char* str) &#123;</span><br><span class="line">    int len&#x3D;0;</span><br><span class="line">    while(str[len++]);   &#x2F;&#x2F; 循环求出长度len,以&#39;\0&#39;结尾</span><br><span class="line">    asm_print(str, len);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>C_with_S_S.S代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">section .data</span><br><span class="line">str: db &quot;asm_print hello world!&quot;, 0xa, 0 ; 0xa为换行符,0为结束符</span><br><span class="line">str_len equ $-str</span><br><span class="line"></span><br><span class="line">section .text</span><br><span class="line">extern c_print</span><br><span class="line">global _start</span><br><span class="line">_start:</span><br><span class="line">	push str</span><br><span class="line">	call c_print</span><br><span class="line">	add esp, 4</span><br><span class="line">	</span><br><span class="line">; 退出程序</span><br><span class="line">	mov eax, 1 ; exit()</span><br><span class="line">	int 0x80</span><br><span class="line"></span><br><span class="line">; 下面模拟write系统调用</span><br><span class="line">global asm_print</span><br><span class="line">asm_print:</span><br><span class="line">	push ebp</span><br><span class="line">	mov ebp, esp</span><br><span class="line">	mov eax, 4</span><br><span class="line">	mov ebx, 1</span><br><span class="line">	mov ecx, [ebp + 8]   ; str</span><br><span class="line">	mov edx, [ebp + 0xc] ; len</span><br><span class="line">	int 0x80</span><br><span class="line">	pop ebp</span><br><span class="line">	ret</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">nasm -f elf -o C_with_S_S.o C_with_S_S.S</span><br><span class="line">gcc -m32 -c C_with_S_c.c -o C_with_S_c.o</span><br><span class="line">ld -m elf_i386 C_with_S_S.o C_with_S_c.o -o a.out</span><br><span class="line">.&#x2F;a.out</span><br></pre></td></tr></table></figure>
+
+<p>运行结果如下</p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190602494/0" alt="image-20210207160240905"></p>
+<h2 id="实现打印函数"><a href="#实现打印函数" class="headerlink" title="实现打印函数"></a>实现打印函数</h2><h3 id="显卡的端口控制"><a href="#显卡的端口控制" class="headerlink" title="显卡的端口控制"></a>显卡的端口控制</h3><p>显卡的端口控制也是通过 in 和 out 指令加不同的端口号。</p>
+<p>按照它们在图形管线（位于 CPU 和 video 之间）中的位置的顺序 （ 寄存器的目录</p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190602517/0" alt="image-20210207161620334"></p>
+<p>前四组寄存器属于分组，它们被分成了两类寄存器，即 Address Register 和 Data Register</p>
+<p>Address Register 作为数组的索引（下标），Data Register 作为寄存器数组中该索引对应的寄存器，它相当于所对应的寄存器的窗口，往此窗口读写的数据都作用在索引所对应的寄存器上。</p>
+<p>CRT Controller Registers 寄存器组中的 Address Register 和 Data Register 的端口地址有些特殊，它的端口地址并不固定，具体值取决于 Miscellaneous Output Register 寄存器中的 Input/Output Address Select字段</p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190602528/0" alt="image-20210207162912644"></p>
+<p>此寄存器各字段的英文描述</p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190602551/0" alt="image-20210207162951870"></p>
+<p>这里 <strong>I/OAS</strong>（Input/Output Address Select）字段不仅影响 CRT Controller Registers 寄存器组的 Address Register和 Data Register的端口地址，而且还影响 Feature Control register 寄存器的写端口地址和 Input Status #1 Register 寄存器的端口地址（此寄存器只有读端口），也就是影响了表 6-2 中所有端口地址中包括 x 的寄存器。</p>
+<p>I/OAS（Input/Output Address Select）</p>
+<blockquote>
+<p>此位用来选择 CRT controller 寄存器组的地址，这里是指 Address Register 和 Data Register 的地址。</p>
+<p>当此位为 0 时：</p>
+<p>CRT controller 寄存器组的端口地址被设置为 0x3Bx，结合表 6-2，Address Register 和 Data Register 的端口地址实际值为 3B4h-3B5h。并且为了兼容 monochrome 适配器（显卡），Input Status #1 Register 寄存器的端口地址被设置为 0x3BA。 </p>
+<p>y 当此位为 1 时：</p>
+<p>CRT controller 寄存器组的端口地址被设置为 0x3Dx，结合表 6-2，Address Register 和 Data Register 的端口地址实际值为 3D4h-3D5h。并且为了兼容 color/graphics 适配器（显卡），Input Status #1Register 寄存器的端口地址被设置为 0x3DA。</p>
+</blockquote>
+<p>Feature Control register 寄存器的写端口也是 3xAh 的形式，该端口地址取值以同样的方式受 I/OAS 位的影响。</p>
+<blockquote>
+<p>如果 I/OAS 位为 0，写端口地址为 3BAh。 </p>
+<p>如果 I/OAS 位为 1，写端口地址为 3DAh。</p>
+</blockquote>
+<p>默认情况下，Miscellaneous Output Register 寄存器的值为 0x67，其他字段不管，咱们只关注这最重要的 I/OAS 位，其值为 1。也就是说：</p>
+<blockquote>
+<p>CRT controller 寄存器组的 Address Register 的端口地址为 0x3D4，</p>
+<p>Data Register 的端口地址 0x3D5。 </p>
+<p>Input Status #1Register 寄存器的端口地址被设置为 0x3DA。 </p>
+<p>Feature Control register 寄存器的写端口是 0x3DA。</p>
+</blockquote>
+<p>其他分组寄存器( 目前不是很重要 )</p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190602570/0" alt="image-20210207163822970"></p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190602587/0" alt="image-20210207163841020"></p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190602607/0" alt="image-20210207163917235"></p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190602629/0" alt="image-20210207163931628"></p>
+<h3 id="实现单个字符打印"><a href="#实现单个字符打印" class="headerlink" title="实现单个字符打印"></a>实现单个字符打印</h3><p>对于字符的打印主要是对显卡端口的操作，所以是用汇编实现，这里新键一个<strong>lib目录</strong>，里面添加一个头文件，主要申请一些数据结构信息，来自Linux源码。</p>
+<p><strong>stdint.h</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> _LIB_STDINT_H_</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _LIB_STDINT_H_</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">signed</span> <span class="keyword">char</span> <span class="keyword">int8_t</span>;</span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">signed</span> short <span class="keyword">int</span> <span class="keyword">int16_t</span>;</span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">signed</span> <span class="keyword">int</span> <span class="keyword">int32_t</span>;</span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">signed</span> <span class="keyword">long</span> <span class="keyword">long</span> <span class="keyword">int</span> <span class="keyword">int64_t</span>;</span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">char</span> <span class="keyword">uint8_t</span>;</span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">unsigned</span> short <span class="keyword">int</span> <span class="keyword">uint16_t</span>;</span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="keyword">uint32_t</span>;</span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="keyword">long</span> <span class="keyword">int</span> <span class="keyword">uint64_t</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span> <span class="comment">//!_LIB_STDINT_H_</span></span></span><br></pre></td></tr></table></figure>
+
+<p>再新建一个user目录和一个kernel目录，我们的print实现代码就在kernel目录下的<code>print.S</code>，这个函数比较复杂，处理流程如下</p>
+<blockquote>
+<ol>
+<li>备份寄存器现场</li>
+<li>获取光标坐标值，光标坐标值是下一个可打印字符的位置</li>
+<li>获取待打印的字符</li>
+<li>判断字符是否为控制字符，如回车、换行、退格符需要特殊处理</li>
+<li>判断是否需要滚屏</li>
+<li>更新光标坐标值，使其指向下一个打印字符的位置</li>
+<li>恢复寄存器现场，退出</li>
+</ol>
+</blockquote>
+<p>首先需要知道光标和字符的区别，它们之间没有任何关系，光标位置保存在光标寄存器中，可以手动维护，这就需要参考书中的显卡寄存器索引(P264)，我们需要操作CRT控制数据寄存器中索引为0x0E的Cursor Location High Register和索引为0x0F的Cursor Location Low Register分别用来储存光标坐标的高8位和低8位。访问CRT寄存器，需要首先往端口地址为0x3D4寄存器写入索引，然后再从端口0x3D5的数据寄存器读写数据，另外一些特殊字符需要特殊处理，其中还会涉及到滚屏的处理，我们的屏幕是<code>80*25</code>大小的，步骤如下：</p>
+<blockquote>
+<ol>
+<li>将第1<del>24行搬到0</del>23行，覆盖第0行</li>
+<li>将24行也就是最后一行用空格覆盖，看起来像新的一行</li>
+<li>光标移动到第24行行首</li>
+</ol>
+</blockquote>
+<p><strong>print.S</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br></pre></td><td class="code"><pre><span class="line">TI_GDT equ 0</span><br><span class="line">RPL0 equ 0</span><br><span class="line">SELECTOR_VIDEO equ (0x0003&lt;&lt;3) + TI_GDT + RPL0</span><br><span class="line"></span><br><span class="line">[bits 32]</span><br><span class="line">section .text</span><br><span class="line">; ----------------- put_char -----------------</span><br><span class="line">; 把栈中的一个字符写入光标所在处</span><br><span class="line">; --------------------------------------------</span><br><span class="line">global put_char ; 全局变量，外部可调用</span><br><span class="line">put_char:</span><br><span class="line">	pushad ; 备份环境</span><br><span class="line">	; 保证gs中为正确的视频段选择子</span><br><span class="line">	; 为保险起见，每次打印时都为gs赋值</span><br><span class="line">	mov ax, SELECTOR_VIDEO ; 不能直接把立即数送入段寄存器</span><br><span class="line">	mov gs, ax</span><br><span class="line">	</span><br><span class="line">; 获取当前光标位置，25个字符一行，一共80行，从0行开始</span><br><span class="line">; 先获得高8位</span><br><span class="line">	mov dx, 0x03d4  ; 索引寄存器</span><br><span class="line">	mov al, 0x0e    ; 用于提供光标位置的高8位</span><br><span class="line">	out dx, al</span><br><span class="line">	mov dx, 0x03d5  ; 通过读写数据端口0x3d5来获得或设置光标位置</span><br><span class="line">	in  al, dx      ; 得到了光标位置的高8位</span><br><span class="line">	mov ah, al</span><br><span class="line">	</span><br><span class="line">	; 在获取低8位光标</span><br><span class="line">	mov dx, 0x3d4</span><br><span class="line">	mov al, 0x0f</span><br><span class="line">	out dx, al</span><br><span class="line">	mov dx, 0x3d5</span><br><span class="line">	in  al, dx</span><br><span class="line">	; 将16位完整的光标存入bx</span><br><span class="line">	mov bx, ax</span><br><span class="line">	; 下面这行是在栈中获取待打印的字符</span><br><span class="line">	mov ecx, [esp + 36] ; pushad压入4x8&#x3D;32字节</span><br><span class="line">						; 加上主函数4字节返回地址</span><br><span class="line">	cmp cl, 0xd			; 回车CR是0x0d，换行LF是0x0a</span><br><span class="line">	jz .is_carriage_return</span><br><span class="line">	cmp cl, 0xa</span><br><span class="line">	jz .is_line_feed</span><br><span class="line">	</span><br><span class="line">	cmp cl, 0x8			; BS(backspace)的asc码是8</span><br><span class="line">	jz .is_backspace</span><br><span class="line">	jmp .put_other</span><br><span class="line"></span><br><span class="line">.is_backspace:</span><br><span class="line">	;;;;;;;;;;;;;;;;;; 对于backspace的一点说明 ;;;;;;;;;;;;;;;;;;</span><br><span class="line">	; 当为 backspace 时，光标前移一位</span><br><span class="line">	; 末尾添加空格或空字符0</span><br><span class="line">	dec bx</span><br><span class="line">	shl bx, 1				; 光标左移一位等于乘2</span><br><span class="line">							; 表示光标对应显存中的偏移字节</span><br><span class="line">	mov byte [gs:bx], 0x20	; 将待删除的字节补为0或空格皆可</span><br><span class="line">	inc bx</span><br><span class="line">	mov byte [gs:bx], 0x07</span><br><span class="line">	shr bx, 1</span><br><span class="line">	jmp .set_cursor</span><br><span class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</span><br><span class="line">.put_other:</span><br><span class="line">	shl bx, 1      			; 光标位置用2字节表示，将光标值乘2         </span><br><span class="line">						    ; 表示对应显存中的偏移字节</span><br><span class="line">	mov [gs:bx], cl         ; ASCII字符本身</span><br><span class="line">	inc bx</span><br><span class="line">	mov byte [gs:bx], 0x07  ; 字符属性</span><br><span class="line">	shr bx, 1				; 恢复老的光标值</span><br><span class="line">	inc bx					; 下一个光标值</span><br><span class="line">	cmp bx, 2000</span><br><span class="line">	jl .set_cursor			; 若光标值小于2000，表示未写到显存的最后，则去设置新的光标值</span><br><span class="line">							; 若超出屏幕字符数大小(2000)则换行处理</span><br><span class="line">.is_line_feed:				; 是换行符LF(\n)</span><br><span class="line">.is_carriage_return:			; 是回车符</span><br><span class="line">; 如果是CR(\r)，只要把光标移到行首就行了</span><br><span class="line">	xor dx, dx 				; dx是被除数的高16位，清0</span><br><span class="line">	mov ax, bx				; ax是被除数的低16位</span><br><span class="line">	mov si, 80              ; 效访Linux中\n表示下一行的行首</span><br><span class="line">	div si					; 这里\n和\r都处理为下一行的行首</span><br><span class="line">	sub bx, dx				; 光标值减去除80的余数便是取整</span><br><span class="line">							; 以上4行处理\r的代码</span><br><span class="line">.is_carriage_return_end:    ; 回车符CR处理结束</span><br><span class="line">	add bx, 80</span><br><span class="line">	cmp bx, 2000</span><br><span class="line">.is_line_feed_end:			; 若是LF(\n)，将光标移+80便可</span><br><span class="line">	jl .set_cursor</span><br><span class="line">; 屏幕行范围是0~24，滚屏的原理是将屏幕的第1~24行搬运到第0~23行，再将第24行用空格填充</span><br><span class="line">.roll_screen:				; 若超出屏幕大小，开始滚屏</span><br><span class="line">	cld</span><br><span class="line">	mov ecx, 960			; 2000-80&#x3D;1920个字符要搬运，共1920*2&#x3D;3820字节</span><br><span class="line">					; 一次搬4字节，共3840&#x2F;4&#x3D;960次</span><br><span class="line">	mov esi, 0xc00b80a0		; 第一行行首</span><br><span class="line">	mov edi, 0xc00b8000		; 第0行行首</span><br><span class="line">	rep movsd</span><br><span class="line">	</span><br><span class="line">; 将最后一行填充为空白</span><br><span class="line">	mov ebx, 3840			; 最后一行首字符的第一个字节偏移&#x3D;1920*2</span><br><span class="line">	mov ecx, 80			; 一行是80字符(160字节)，每次清空1字符(2字节)，一行需要移动80次</span><br><span class="line">	</span><br><span class="line">.cls:</span><br><span class="line">	mov word [gs:ebx], 0x0720 	; 0x0720是黑底白字的空格键</span><br><span class="line">	add ebx, 2</span><br><span class="line">	loop .cls</span><br><span class="line">	mov bx, 1920			; 将光标值重置为1920，最后一行的首字符</span><br><span class="line"></span><br><span class="line">.set_cursor:</span><br><span class="line">; 将光标设为bx值</span><br><span class="line">; 1.先设置高8位</span><br><span class="line">	mov dx, 0x03d4		; 索引寄存器</span><br><span class="line">	mov al, 0x0e		; 用于提供光标位置的高8位</span><br><span class="line">	out dx, al</span><br><span class="line">	mov dx, 0x03d5		; 通过读写数据端口0x3d5来获得或设置光标位置</span><br><span class="line">	mov al, bh</span><br><span class="line">	out dx, al</span><br><span class="line">	</span><br><span class="line">; 2.再设置低8位</span><br><span class="line">	mov dx, 0x3d4</span><br><span class="line">	mov al, 0x0f</span><br><span class="line">	out dx, al</span><br><span class="line">	mov dx, 0x03d5</span><br><span class="line">	mov al, bl</span><br><span class="line">	out dx, al</span><br><span class="line">.put_char_done:</span><br><span class="line">	popad</span><br><span class="line">	ret</span><br></pre></td></tr></table></figure>
+
+<p><strong>print.h</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#ifndef __LIB_KERNEL_PRINT_H &#x2F;&#x2F; 如果没有__LIB_KERNEL_PRINT_H宏则编译下面的代码</span><br><span class="line">#define __LIB_KERNEL_PRINT_H</span><br><span class="line">#include &quot;stdint.h&quot;</span><br><span class="line">void put_char(uint8_t char_asci); &#x2F;&#x2F; 这里是8位无符号整型,为了和之前参数存放在cl寄存器长度吻合</span><br><span class="line">#endif</span><br></pre></td></tr></table></figure>
+
+<p><strong>main.c</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"print.h"</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span>&#123;</span><br><span class="line">	put_char(<span class="string">'k'</span>);</span><br><span class="line">	put_char(<span class="string">'e'</span>);</span><br><span class="line">	put_char(<span class="string">'r'</span>);</span><br><span class="line">	put_char(<span class="string">'n'</span>);</span><br><span class="line">	put_char(<span class="string">'e'</span>);</span><br><span class="line">	put_char(<span class="string">'l'</span>);</span><br><span class="line">	put_char(<span class="string">'\n'</span>);</span><br><span class="line">	put_char(<span class="string">'1'</span>);</span><br><span class="line">	put_char(<span class="string">'2'</span>);</span><br><span class="line">	put_char(<span class="string">'\b'</span>);</span><br><span class="line">	put_char(<span class="string">'3'</span>);</span><br><span class="line">	<span class="keyword">while</span>(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行后的目录如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">.</span><br><span class="line">├── boot</span><br><span class="line">│   ├── include</span><br><span class="line">│   │   └── boot.inc</span><br><span class="line">│   ├── loader.bin</span><br><span class="line">│   ├── loader.S</span><br><span class="line">│   ├── mbr.bin</span><br><span class="line">│   └── mbr.S</span><br><span class="line">├── kernel</span><br><span class="line">│   ├── kernel.bin</span><br><span class="line">│   ├── main.c</span><br><span class="line">│   └── main.o</span><br><span class="line">└── lib</span><br><span class="line">    ├── kernel</span><br><span class="line">    │   ├── print.h</span><br><span class="line">    │   └── print.S</span><br><span class="line">    ├── stdint.h</span><br><span class="line">    └── user</span><br></pre></td></tr></table></figure>
+
+<p>操作</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">--sudo nasm -f elf -o print.o print.S</span><br><span class="line">--sudo gcc -m32 -I &#x2F;home&#x2F;fyz&#x2F;sc&#x2F;bochs-2.6.2&#x2F;lib&#x2F;kernel -c -o main.o main.c</span><br><span class="line">--sudo ld -m elf_i386 -Ttext 0xc0001500 -e main -o kernel.bin main.o &#x2F;home&#x2F;fyz&#x2F;sc&#x2F;bochs-2.6.2&#x2F;lib&#x2F;kernel&#x2F;print.o</span><br><span class="line">--sudo dd if&#x3D;.&#x2F;kernel.bin of&#x3D;&#x2F;home&#x2F;fyz&#x2F;sc&#x2F;bochs-2.6.2&#x2F;hd60M.img bs&#x3D;512 count&#x3D;200 seek&#x3D;9 conv&#x3D;notrunc</span><br><span class="line">--sudo bin&#x2F;bochs -f bochsrc.disk</span><br></pre></td></tr></table></figure>
+
+<p>运行结果如下</p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190602646/0" alt="image-20210216064159425"></p>
+<h3 id="实现字符串的打印"><a href="#实现字符串的打印" class="headerlink" title="实现字符串的打印"></a>实现字符串的打印</h3><p><code>put_str</code> 函数是我们的字符串打印函数，它的原理是每次处理一个字符，循环调用 <code>put_char</code> 来完成字符串中全部字符的打印，</p>
+<p>把<code>put_char</code>函数封装起来，<code>put_str</code>通过<code>put_char</code>来打印以<strong>0</strong>字符结尾的字符串，思想就是循环打印直到0结。</p>
+<p><code>print.S</code> 增加的代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">; --------------------------------------------</span><br><span class="line">; put_str通过put_char来打印以0字符结尾的字符串</span><br><span class="line">; 输入：栈中参数为打印的字符串</span><br><span class="line">; 输出：无</span><br><span class="line">; --------------------------------------------</span><br><span class="line">global put_str</span><br><span class="line">put_str:</span><br><span class="line">; 此函数用到ebx和ecx，先备份</span><br><span class="line">	push ebx</span><br><span class="line">	push ecx</span><br><span class="line">	xor ecx, ecx</span><br><span class="line">	mov ebx, [esp + 0xc] ; 栈中得到待打印字符串的地址</span><br><span class="line">.goon:</span><br><span class="line">	mov cl, [ebx]</span><br><span class="line">	cmp cl, 0       ; 如果处理到了字符串尾，跳到结束处返回</span><br><span class="line">	jz .str_over</span><br><span class="line">	push ecx		; 为put_char函数传递参数</span><br><span class="line">	call put_char	; 循环调用put_char实现打印字符串</span><br><span class="line">	add esp, 4</span><br><span class="line">	inc ebx			; ebx指向下一个字符</span><br><span class="line">	jmp .goon</span><br><span class="line"></span><br><span class="line">.str_over:</span><br><span class="line">	pop ecx</span><br><span class="line">	pop ebx</span><br><span class="line">	ret</span><br></pre></td></tr></table></figure>
+
+<p><code>print.h</code> 需要一行声明</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#ifndef __LIB_KERNEL_PRINT_H &#x2F;&#x2F; 如果没有__LIB_KERNEL_PRINT_H宏则编译下面的代码</span><br><span class="line">#define __LIB_KERNEL_PRINT_H</span><br><span class="line">#include &quot;stdint.h&quot;</span><br><span class="line">void put_char(uint8_t char_asci); &#x2F;&#x2F; 这里是8位无符号整型,为了和之前参数存放在cl寄存器长度吻合</span><br><span class="line">void put_str(char* message);</span><br><span class="line">#endif</span><br></pre></td></tr></table></figure>
+
+<p><code>main.c</code> 对其进行调用测试</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"print.h"</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span>&#123;</span><br><span class="line">	put_str(<span class="string">"Welcome to kernel\n"</span>);</span><br><span class="line">	<span class="keyword">while</span>(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>操作</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">--sudo nasm -f elf -o print.o print.S</span><br><span class="line">--sudo gcc -m32 -I &#x2F;home&#x2F;fyz&#x2F;sc&#x2F;bochs-2.6.2&#x2F;lib&#x2F;kernel -c -o main.o main.c</span><br><span class="line">--sudo ld -m elf_i386 -Ttext 0xc0001500 -e main -o kernel.bin main.o &#x2F;home&#x2F;fyz&#x2F;sc&#x2F;bochs-2.6.2&#x2F;lib&#x2F;kernel&#x2F;print.o</span><br><span class="line">--sudo dd if&#x3D;.&#x2F;kernel.bin of&#x3D;&#x2F;home&#x2F;fyz&#x2F;sc&#x2F;bochs-2.6.2&#x2F;hd60M.img bs&#x3D;512 count&#x3D;200 seek&#x3D;9 conv&#x3D;notrunc</span><br><span class="line">--sudo bin&#x2F;bochs -f bochsrc.disk</span><br></pre></td></tr></table></figure>
+
+<p>运行结果如下</p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190602668/0" alt="image-20210216070742879"></p>
+<h3 id="实现整数打印"><a href="#实现整数打印" class="headerlink" title="实现整数打印"></a>实现整数打印</h3><p>封装 <code>put_char</code> 将数字转换成对应的字符，比如数字 9 变成字符‘9’</p>
+<p>逐位处理，A~F 再单独处理，再增加对高位多余0的处理</p>
+<p><code>print.S</code> 增加的代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line">;--------------------   将小端字节序的数字变成对应的ascii后，倒置   -----------------------</span><br><span class="line">;输入：栈中参数为待打印的数字</span><br><span class="line">;输出：在屏幕上打印16进制数字,并不会打印前缀0x,如打印10进制15时，只会直接打印f，不会是0xf</span><br><span class="line">;------------------------------------------------------------------------------------------</span><br><span class="line"></span><br><span class="line">global put_int</span><br><span class="line">put_int:</span><br><span class="line">	pushad</span><br><span class="line">	mov ebp, esp</span><br><span class="line">	mov eax, [ebp + 4*9] ; call的返回地址占4字节再加上pushad的8个四字节</span><br><span class="line">	mov edx, eax</span><br><span class="line">	mov edi, 7	; 指定在put_int_buffer中初始的偏移量	</span><br><span class="line">	mov ecx, 8	; 32位数字中，十六进制数字的位数是8个</span><br><span class="line">	mov ebx, put_int_buffer</span><br><span class="line">	</span><br><span class="line">; 将32位数字按照十六进制的形式从低位到高位逐个处理</span><br><span class="line">; 共处理8个十六进制数字</span><br><span class="line">.16based_4bits:	; 每4位二进制是16进制数字的1位</span><br><span class="line">; 遍历每一位十六进制数字</span><br><span class="line">	and edx, 0x0000000F	; 解析十六进制数字的每一位</span><br><span class="line">						; and与操作后，edx只有低4位有效</span><br><span class="line">	cmp edx, 9			; 数字0~9和a~f需要分别处理成对应的字符</span><br><span class="line">	jg .is_A2F</span><br><span class="line">	add edx, &#39;0&#39;		; ASCII码是8位大小。add求和操作后，edx低8位有效</span><br><span class="line">	jmp .store</span><br><span class="line">.is_A2F:</span><br><span class="line">	sub edx, 10			; A~F减去10所得到的差，再加上字符A的</span><br><span class="line">						; ASCII码，便是A~F对应的ASCII码</span><br><span class="line">	add edx, &#39;A&#39;</span><br><span class="line">; 将每一位数字转换成对应的字符后,按照类似“大端”的顺序存储到缓冲区put_int_buffer</span><br><span class="line">; 高位字符放在低地址,低位字符要放在高地址,这样和大端字节序类似,只不过咱们这里是字符序.</span><br><span class="line">.store:</span><br><span class="line">; 此时dl中应该是数字对应的字符的ASCII码</span><br><span class="line">	mov [ebx + edi], dl</span><br><span class="line">	dec edi</span><br><span class="line">	shr eax, 4</span><br><span class="line">	mov edx, eax</span><br><span class="line">	loop .16based_4bits</span><br><span class="line">	</span><br><span class="line">; 现在put_int_buffer中已全是字符，打印之前</span><br><span class="line">; 把高位连续的字符去掉，比如把字符000123变成123</span><br><span class="line">.ready_to_print:</span><br><span class="line">	inc edi		; 此时edi退减为-1(0xffffffff),加上1使其为0</span><br><span class="line">.skip_prefix_0:</span><br><span class="line">	cmp edi, 8	; 若已经比较第9个字符了</span><br><span class="line">				; 表示待打印的字符串为全0</span><br><span class="line">	je .full0</span><br><span class="line">; 找出连续的0字符，edi作为非0的最高位字符的偏移</span><br><span class="line">.go_on_skip:</span><br><span class="line">	mov cl, [put_int_buffer + edi]</span><br><span class="line">	inc edi</span><br><span class="line">	cmp cl, &#39;0&#39;</span><br><span class="line">	je .skip_prefix_0	; 继续判断下一位字符是否为字符0(不是数字0)</span><br><span class="line">	dec edi				; edi在上面的inc操作中指向了下一个字符</span><br><span class="line">	; 若当前字符不为&#39;0&#39;，要使edi减1恢复指向当前字符</span><br><span class="line">	jmp .put_each_num</span><br><span class="line">	</span><br><span class="line">.full0:</span><br><span class="line">	mov cl, &#39;0&#39;			; 输入的数字为全0时，则只打印0</span><br><span class="line">.put_each_num:</span><br><span class="line">	push ecx			; 此时cl中为可打印的字符</span><br><span class="line">	call put_char</span><br><span class="line">	add esp, 4</span><br><span class="line">	inc edi				; 使edi指向下一个字符</span><br><span class="line">	mov cl, [put_int_buffer + edi] ; 获取下一个字符到cl寄存器</span><br><span class="line">	cmp edi, 8</span><br><span class="line">	jl .put_each_num</span><br><span class="line">	popad</span><br><span class="line">	ret</span><br></pre></td></tr></table></figure>
+
+<p><code>print.h</code>需要添加 put_int 函数的定义</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#ifndef __LIB_KERNEL_PRINT_H &#x2F;&#x2F; 如果没有__LIB_KERNEL_PRINT_H宏则编译下面的代码</span><br><span class="line">#define __LIB_KERNEL_PRINT_H</span><br><span class="line">#include &quot;stdint.h&quot;</span><br><span class="line">void put_char(uint8_t char_asci); &#x2F;&#x2F; 这里是8位无符号整型,为了和之前参数存放在cl寄存器长度吻合</span><br><span class="line">void put_str(char* message); &#x2F;&#x2F; 字符串打印，必须以\0结尾</span><br><span class="line">void put_int(uint32_t num); &#x2F;&#x2F; 以16进制的形式打印数字</span><br><span class="line">#endif</span><br></pre></td></tr></table></figure>
+
+<p><code>main.c</code> 对其进行调用测试</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"print.h"</span> </span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span> </span>&#123; </span><br><span class="line">    put_str(<span class="string">"I am kernel\n"</span>); </span><br><span class="line">    put_int(<span class="number">0</span>); </span><br><span class="line">    put_char(<span class="string">'\n'</span>); </span><br><span class="line">    put_int(<span class="number">9</span>); </span><br><span class="line">    put_char(<span class="string">'\n'</span>); </span><br><span class="line">    put_int(<span class="number">0x00021a3f</span>); </span><br><span class="line">    put_char(<span class="string">'\n'</span>); </span><br><span class="line">    put_int(<span class="number">0x12345678</span>); </span><br><span class="line">    put_char(<span class="string">'\n'</span>); </span><br><span class="line">    put_int(<span class="number">0x00000000</span>); </span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>操作</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">--sudo nasm -f elf -o print.o print.S</span><br><span class="line">--sudo gcc -m32 -I &#x2F;home&#x2F;fyz&#x2F;sc&#x2F;bochs-2.6.2&#x2F;lib&#x2F;kernel -c -o main.o main.c</span><br><span class="line">--sudo ld -m elf_i386 -Ttext 0xc0001500 -e main -o kernel.bin main.o &#x2F;home&#x2F;fyz&#x2F;sc&#x2F;bochs-2.6.2&#x2F;lib&#x2F;kernel&#x2F;print.o</span><br><span class="line">--sudo dd if&#x3D;.&#x2F;kernel.bin of&#x3D;&#x2F;home&#x2F;fyz&#x2F;sc&#x2F;bochs-2.6.2&#x2F;hd60M.img bs&#x3D;512 count&#x3D;200 seek&#x3D;9 conv&#x3D;notrunc</span><br><span class="line">--sudo bin&#x2F;bochs -f bochsrc.disk</span><br></pre></td></tr></table></figure>
+
+<p>运行结果如下</p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190602691/0" alt="image-20210216084945620"> </p>
+<p>综合以上 <strong>print.S</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br></pre></td><td class="code"><pre><span class="line">; 内核打印功能实现</span><br><span class="line">TI_GDT equ 0</span><br><span class="line">RPL0 equ 0</span><br><span class="line">SELECTOR_VIDEO equ (0x0003 &lt;&lt; 3) + TI_GDT + RPL0</span><br><span class="line"></span><br><span class="line">section .data</span><br><span class="line">put_int_buffer dd 0, 0</span><br><span class="line"></span><br><span class="line">[bits 32]</span><br><span class="line">section .text</span><br><span class="line">; put_char，将栈中的一个字符写入光标所在处</span><br><span class="line">global put_char</span><br><span class="line">global put_str</span><br><span class="line">global put_int</span><br><span class="line"></span><br><span class="line">put_int:</span><br><span class="line">    pushad</span><br><span class="line">    mov ebp, esp</span><br><span class="line">    mov eax, [ebp + 4 * 9]</span><br><span class="line">    mov edx, eax</span><br><span class="line">    mov edi, 7</span><br><span class="line">    mov ecx, 8</span><br><span class="line">    mov ebx, put_int_buffer</span><br><span class="line"></span><br><span class="line">.16based_4bits:</span><br><span class="line">    and edx, 0x0000000F</span><br><span class="line">    cmp edx, 9</span><br><span class="line">    jg .is_A2F</span><br><span class="line">    add edx, &#39;0&#39;</span><br><span class="line">    jmp .store</span><br><span class="line"></span><br><span class="line">.is_A2F:</span><br><span class="line">    sub edx, 10</span><br><span class="line">    add edx, &#39;A&#39;</span><br><span class="line"></span><br><span class="line">.store:</span><br><span class="line">    mov [ebx + edi], dl</span><br><span class="line">    dec edi</span><br><span class="line">    shr eax, 4</span><br><span class="line">    mov edx, eax</span><br><span class="line">    loop .16based_4bits</span><br><span class="line"></span><br><span class="line">.ready_print:</span><br><span class="line">    inc edi</span><br><span class="line"></span><br><span class="line">.skip_prefix_0:</span><br><span class="line">    cmp edi, 8</span><br><span class="line">    je .full0</span><br><span class="line"></span><br><span class="line">.go_on_skip:</span><br><span class="line">    mov cl, [put_int_buffer + edi]</span><br><span class="line">    inc edi</span><br><span class="line">    cmp cl, &#39;0&#39;</span><br><span class="line">    je .skip_prefix_0</span><br><span class="line">    dec edi</span><br><span class="line">    jmp .put_each_num</span><br><span class="line"></span><br><span class="line">.full0:</span><br><span class="line">    mov cl, &#39;0&#39;</span><br><span class="line">.put_each_num:</span><br><span class="line">    push ecx</span><br><span class="line">    call put_char</span><br><span class="line">    add esp, 4</span><br><span class="line">    inc edi</span><br><span class="line">    mov cl, [put_int_buffer + edi]</span><br><span class="line">    cmp edi, 8</span><br><span class="line">    jl .put_each_num</span><br><span class="line">    popad</span><br><span class="line">    ret</span><br><span class="line"></span><br><span class="line">; 字符串打印函数，基于put_char封装</span><br><span class="line">put_str:</span><br><span class="line">    push ebx</span><br><span class="line">    push ecx</span><br><span class="line">    xor ecx, ecx</span><br><span class="line">    mov ebx, [esp + 12]</span><br><span class="line"></span><br><span class="line">.go_on:</span><br><span class="line">    mov cl, [ebx]</span><br><span class="line">    cmp cl, 0</span><br><span class="line">    jz .str_over</span><br><span class="line">    push ecx</span><br><span class="line">    call put_char</span><br><span class="line">    add esp, 4</span><br><span class="line">    inc ebx</span><br><span class="line">    jmp .go_on</span><br><span class="line"></span><br><span class="line">.str_over:</span><br><span class="line">    pop ecx</span><br><span class="line">    pop ebx</span><br><span class="line">    ret</span><br><span class="line"></span><br><span class="line">put_char:</span><br><span class="line">    pushad</span><br><span class="line">    mov ax, SELECTOR_VIDEO</span><br><span class="line">    mov gs, ax</span><br><span class="line"></span><br><span class="line">    ; 获取当前光标位置</span><br><span class="line">    mov dx, 0x03d4</span><br><span class="line">    mov al, 0x0e</span><br><span class="line">    out dx, al</span><br><span class="line">    mov dx, 0x03d5</span><br><span class="line">    in al, dx</span><br><span class="line">    mov ah, al</span><br><span class="line"></span><br><span class="line">    mov dx, 0x03d4</span><br><span class="line">    mov al, 0x0f</span><br><span class="line">    out dx, al</span><br><span class="line">    mov dx, 0x03d5</span><br><span class="line">    in al, dx</span><br><span class="line"></span><br><span class="line">    mov bx, ax</span><br><span class="line">    mov ecx, [esp + 36]</span><br><span class="line"></span><br><span class="line">    cmp cl, 0xd</span><br><span class="line">    jz .is_carriage_return</span><br><span class="line">    cmp cl, 0xa</span><br><span class="line">    jz .is_line_feed</span><br><span class="line"></span><br><span class="line">    cmp cl, 0x8</span><br><span class="line">    jz .is_backspace</span><br><span class="line">    jmp .put_other</span><br><span class="line"></span><br><span class="line">.is_backspace:</span><br><span class="line">    dec bx</span><br><span class="line">    shl bx, 1</span><br><span class="line"></span><br><span class="line">    mov byte [gs:bx], 0x20</span><br><span class="line">    inc bx</span><br><span class="line">    mov byte [gs:bx], 0x07</span><br><span class="line">    shr bx, 1</span><br><span class="line">    jmp .set_cursor</span><br><span class="line"></span><br><span class="line">.put_other:</span><br><span class="line">    shl bx, 1</span><br><span class="line">    mov [gs:bx], cl</span><br><span class="line">    inc bx</span><br><span class="line">    mov byte [gs:bx], 0x07</span><br><span class="line">    shr bx, 1</span><br><span class="line">    inc bx</span><br><span class="line">    cmp bx, 2000</span><br><span class="line">    jl .set_cursor</span><br><span class="line"></span><br><span class="line">.is_line_feed:</span><br><span class="line">.is_carriage_return:</span><br><span class="line">    xor dx, dx</span><br><span class="line">    mov ax, bx</span><br><span class="line">    mov si, 80</span><br><span class="line"></span><br><span class="line">    div si</span><br><span class="line"></span><br><span class="line">    sub bx, dx</span><br><span class="line"></span><br><span class="line">.is_carriage_return_end:</span><br><span class="line">    add bx, 80</span><br><span class="line">    cmp bx, 2000</span><br><span class="line">.is_line_feed_end:</span><br><span class="line">    jl .set_cursor</span><br><span class="line"></span><br><span class="line">.roll_screeen:</span><br><span class="line">    cld </span><br><span class="line">    mov ecx, 960</span><br><span class="line"></span><br><span class="line">    mov esi, 0xc00b80a0</span><br><span class="line">    mov edi, 0xc00b8000</span><br><span class="line">    rep movsd</span><br><span class="line"></span><br><span class="line">    mov ebx, 3840</span><br><span class="line">    mov ecx, 80</span><br><span class="line"></span><br><span class="line">.cls:</span><br><span class="line">    mov word [gs:ebx], 0x0720</span><br><span class="line">    add ebx, 2</span><br><span class="line">    loop .cls</span><br><span class="line">    mov bx, 1920</span><br><span class="line"></span><br><span class="line">.set_cursor:</span><br><span class="line">    mov dx, 0x03d4</span><br><span class="line">    mov al, 0x0e</span><br><span class="line">    out dx, al</span><br><span class="line">    mov dx, 0x03d5</span><br><span class="line">    mov al, bh</span><br><span class="line">    out dx, al</span><br><span class="line"></span><br><span class="line">    mov dx, 0x03d4</span><br><span class="line">    mov al, 0x0f</span><br><span class="line">    out dx, al</span><br><span class="line">    mov dx, 0x03d5</span><br><span class="line">    mov al, bl</span><br><span class="line">    out dx, al</span><br><span class="line"></span><br><span class="line">.put_char_done:</span><br><span class="line">    popad</span><br><span class="line">    ret</span><br></pre></td></tr></table></figure>
+
+<h2 id="内联汇编"><a href="#内联汇编" class="headerlink" title="内联汇编"></a>内联汇编</h2><p>另一种汇编和 C 语言混合编程的方式便是在 C 语言里面写汇编语言。</p>
+<p>gcc 默认支持的是 AT&amp;T 语法风格的汇编语言</p>
+<h3 id="AT-amp-T-汇编"><a href="#AT-amp-T-汇编" class="headerlink" title="AT&amp;T 汇编"></a>AT&amp;T 汇编</h3><p>AT&amp;T 语法风格与 Intel 的对比</p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190602713/0" alt="image-20210216091411891"></p>
+<p>AT&amp;T 中数字被优先认为是内存地址。</p>
+<p><strong>AT&amp;T 内存寻址：</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">segreg(段基址): base_address(offset_address, index, size)</span><br><span class="line">#segreg（段基址）：base_address + offset_address + index*size</span><br></pre></td></tr></table></figure>
+
+<p>base_address 是基地址，可以为整数、变量名，可正可负。</p>
+<p>offset_address 是偏移地址，index 是索引值，这两个必须是 8 个通用寄存器之一。</p>
+<p>size 是个长度，只能是 1、2、4、8。</p>
+<p><strong>Intel 的内存寻址：</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">segreg:[base+index*size+offset]</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="基本内联汇编"><a href="#基本内联汇编" class="headerlink" title="基本内联汇编"></a>基本内联汇编</h3><p>基本内联汇编是最简单的内联形式，其格式为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">asm [volatile] (&quot;assembly code&quot;)</span><br></pre></td></tr></table></figure>
+
+<p>asm 是必须的，表示是内联汇编；</p>
+<p>volatile 表示让编译器不要修改我的代码 ；</p>
+<p>assembly code 的原则：</p>
+<ul>
+<li>指令必须用双引号引起来，无论双引号中是一条指令或多条指令。</li>
+<li>一对双引号不能跨行，如果跨行需要在结尾用反斜杠 ‘\’ 转移。</li>
+<li>指令之间用分号’;’、换行符’\n’或换行符加制表符’\n’’\t’分隔。</li>
+</ul>
+<p>在基本内联汇编中，若要引用 C 变量，只能将它定义为全局变量。如果定义为局部变量，链接时会找不到这两个符号。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">asm</span>(“movl $<span class="number">9</span>,%eax;””pushl %eax”) <span class="comment">// 正确</span></span><br><span class="line"><span class="keyword">asm</span>(“movl $<span class="number">9</span>,%eax””pushl %eax”)  <span class="comment">// 错误</span></span><br></pre></td></tr></table></figure>
+
+<p>在内联汇编中，要注意操作数的顺序是和 Intel 反着的。</p>
+<p><code>inlineASM.c</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span>* str=<span class="string">"hello,world\n"</span>; </span><br><span class="line"><span class="keyword">int</span> count = <span class="number">0</span>; </span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">()</span></span>&#123; </span><br><span class="line">	<span class="keyword">asm</span>(<span class="string">"pusha; \ </span></span><br><span class="line"><span class="string">	movl $4,%eax; \ </span></span><br><span class="line"><span class="string">	movl $1,%ebx; \ </span></span><br><span class="line"><span class="string">	movl str,%ecx; \ </span></span><br><span class="line"><span class="string">	movl $12,%edx; \ </span></span><br><span class="line"><span class="string">	int $0x80; \ </span></span><br><span class="line"><span class="string">	mov %eax,count;\ </span></span><br><span class="line"><span class="string">	popa \ </span></span><br><span class="line"><span class="string">	"</span>); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>操作</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">--gcc -m32 -o  inlineASM.bin inlineASM.c</span><br><span class="line">--.&#x2F;inlineASM.bin</span><br></pre></td></tr></table></figure>
+
+<p> 运行结果</p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190602733/0" alt="image-20210216093451145"> </p>
+<h3 id="扩展内联汇编"><a href="#扩展内联汇编" class="headerlink" title="扩展内联汇编"></a>扩展内联汇编</h3><p>扩展内联汇编要解决的是在同一个程序中C和汇编如何避免使用寄存器冲突</p>
+<p>汇编执行前不知道那些寄存器C程序正在占用，所以用户在完成这步需要增加栈的压力，也会降低运行速度，因此这步由编译器来执行，<strong>汇编中提供要使用到的C程序中的变量和寄存器</strong>，编译器来提前进行保护</p>
+<p><strong>格式</strong>：<code>asm (volatile) （&quot;assembly code&quot; : output : input : clobber/modify)</code></p>
+<blockquote>
+<ol>
+<li>volatile等同于_ volatile _，<strong>和c中关键字volatile不一样</strong>：编译器不要优化代码，后面的指令保留原样 output:“操作数修饰符约束名” (C 变量名）</li>
+<li><code>input :“［操作数修饰符］约束名”（ c 变量名)</code></li>
+<li>clobber/modify:输入汇编代码执行后可能破坏的寄存器或者内存，来通知编译器保护</li>
+</ol>
+</blockquote>
+<p>上面对output和input的要求称为“约束”，它用来把C代码中的操作数（变量、立即数）映射为汇编中所使用的操作数（寄存器，内存地址）</p>
+<h4 id="约束"><a href="#约束" class="headerlink" title="约束"></a>约束</h4><blockquote>
+<ol>
+<li>寄存器约束 : 要求 gcc 使用哪个寄存器</li>
+<li>内存约束：把c变量的<strong>内存地址</strong>当作内联汇编代码的操作数， 不需要寄存器做中转，直接进行内存读写，也就是汇编代码的操作数是<strong>变量的指针</strong></li>
+<li>立即数约束：传值的时候不通过内存和寄存器，直接作为立即数传给汇编代码，只能作为右值，放在 input 中。</li>
+<li>通用约束</li>
+</ol>
+</blockquote>
+<h5 id="寄存器约束"><a href="#寄存器约束" class="headerlink" title="寄存器约束"></a>寄存器约束</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">a: 表示寄存器 eax&#x2F;ax&#x2F;al </span><br><span class="line">b: 表示寄存器 ebx&#x2F;bx&#x2F;bl </span><br><span class="line">c: 表示寄存器 ecx&#x2F;cx&#x2F;cl </span><br><span class="line">d: 表示寄存器 edx&#x2F;dx&#x2F;dl</span><br><span class="line">D：表示寄存器edi&#x2F;di</span><br><span class="line">S：表示寄存器esi&#x2F;si</span><br><span class="line">q：表示任意这4个通用寄存器之一：eax&#x2F;ebx&#x2F;ecx&#x2F;edx</span><br><span class="line">r：表示任意这6个通用寄存器之一：eax&#x2F;ebx&#x2F;ecx&#x2F;edx&#x2F;esi&#x2F;edi</span><br><span class="line">g：表示可以存放到任意地点（寄存器和内存）。相当千除了同q一样外，还可以让gee安排在内存中</span><br><span class="line">A：把eax和edx组合成64位整数</span><br><span class="line">f：表示浮点寄存器</span><br><span class="line">t：表示第1个浮点寄存器</span><br><span class="line">u：表示第1个浮点寄存器</span><br></pre></td></tr></table></figure>
+
+<p>使用举例</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//基本内联汇编</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;stdio.h&gt; </span></span></span><br><span class="line"><span class="keyword">int</span> in_a = <span class="number">1</span>, in_b = <span class="number">2</span>, out_sum; </span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">()</span> </span>&#123; </span><br><span class="line">    <span class="keyword">asm</span>(<span class="string">" pusha; \ </span></span><br><span class="line"><span class="string">    movl in_a, %eax; \ </span></span><br><span class="line"><span class="string">    movl in_b, %ebx; \ </span></span><br><span class="line"><span class="string">    addl %ebx, %eax; \ </span></span><br><span class="line"><span class="string">    movl %eax, out_sum; \ </span></span><br><span class="line"><span class="string">    popa"</span>); </span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"sum is %d\n"</span>,out_sum); </span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//扩展内联汇编  </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;stdio.h&gt; </span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">()</span> </span>&#123; </span><br><span class="line">    <span class="keyword">int</span> in_a = <span class="number">1</span>, in_b = <span class="number">2</span>, out_sum; </span><br><span class="line">    <span class="keyword">asm</span>(<span class="string">"addl %%ebx, %%eax"</span>:<span class="string">"=a"</span>(out_sum):<span class="string">"a"</span>(in_a),<span class="string">"b"</span>(in_b)); </span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"sum is %d\n"</span>,out_sum); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在基本内联汇编中的寄存器用<strong>单个%做前缀</strong>，在扩展内联汇编中的寄存器前面用<strong>两个%做前缀</strong>。</p>
+<p>（单个%有了新的用途，用来表示占位符</p>
+<h5 id="内存约束"><a href="#内存约束" class="headerlink" title="内存约束"></a>内存约束</h5><p>内存约束是要求 gcc 直接将位于 input 和 output 中的 C 变量的内存地址作为内联汇编代码的操作数，不需要寄存器做中转，直接进行内存读写，也就是汇编代码的操作数是 C 变量的指针。</p>
+<blockquote>
+<p>m：表示操作数可以使用任意一种内存形式。</p>
+<p>o：操作数为内存变量，但访问它是通过偏移量的形式访问，即包含 offset_address 的格式。</p>
+</blockquote>
+<p>下面的文件 mem.c 用约束 m 为例</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;stdio.h&gt; </span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">()</span> </span>&#123; </span><br><span class="line">	<span class="keyword">int</span> in_a = <span class="number">1</span>, in_b = <span class="number">2</span>; </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"in_b is %d\n"</span>, in_b); </span><br><span class="line">	<span class="keyword">asm</span>(<span class="string">"movb %b0, %1;"</span>::<span class="string">"a"</span>(in_a),<span class="string">"m"</span>(in_b)); </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"in_b now is %d\n"</span>, in_b); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190602747/0" alt="image-20210216101010581"> </p>
+<h5 id="立即数约束"><a href="#立即数约束" class="headerlink" title="立即数约束"></a>立即数约束</h5><p>要求 gcc 直接传递立即数给代码，不通过寄存器或内存，只能作为右值，只能放在 input 中</p>
+<blockquote>
+<p>i：表示操作数为整数立即数<br>F：表示操作数为浮点数立即数<br>I：表示操作数为 0～31 之间的立即数<br>J：表示操作数为 0～63 之间的立即数<br>N：表示操作数为 0～255 之间的立即数<br>O：表示操作数为 0～32 之间的立即数<br>X：表示操作数为任何类型立即数</p>
+</blockquote>
+<h5 id="通用约束"><a href="#通用约束" class="headerlink" title="通用约束"></a>通用约束</h5><p>0~9:此约束只用在input部分， 但表示可与 output 和 input 中第n个操作数用相同的寄存器或内存。</p>
+<h4 id="占位符"><a href="#占位符" class="headerlink" title="占位符"></a>占位符</h4><p><strong>占位符分为序号占位符和名称占位符</strong></p>
+<p>产生原因：</p>
+<ol>
+<li>肯定是为了方便代码编写，也容易让编译器识别</li>
+<li>寄存器约束中有一种r约束，即让编译器自主选择寄存器来映射C代码中的变量，但编写者不知道用哪个寄存器，所以引入占位符</li>
+</ol>
+<p>扩展内联汇编中的占位符要有前缀%，所以描述寄存器要用两个%（<code>%%ebx</code>）</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//序号占位符 支持10个操作数</span></span><br><span class="line"><span class="keyword">asm</span>(<span class="string">"movb %h1, %0;"</span>\</span><br><span class="line">    :<span class="string">"=m"</span>(in_b)\</span><br><span class="line">    :<span class="string">"a"</span>(in_a));</span><br><span class="line"><span class="comment">//%0指output %1指input，有多输入则记为%2，%3，%4...</span></span><br><span class="line"><span class="comment">//操作数默认是32位，根据指令对操作数的要求再取8位、16位等</span></span><br><span class="line"><span class="comment">//%和序号之间添加h表示取寄存器的低16位，添加b表示取低8位</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//名称占位符	数量不受限制  规则 [名称]"约束名"(C变量)</span></span><br><span class="line"><span class="keyword">asm</span>(<span class="string">"movb %[xx],%[yy];"</span>\</span><br><span class="line">	:[yy]<span class="string">"=m"</span>(in_b)\</span><br><span class="line">	:[xx]<span class="string">"a"</span>(in_a));</span><br></pre></td></tr></table></figure>
+
+<p><strong>序号占位符</strong> 是对在 output 和 input 中的操作数，按照它们从左到右出现的次序从 0 开始编号，一直到 9。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">asm</span>(<span class="string">"addl %%ebx, %%eax"</span>:<span class="string">"=a"</span>(out_sum):<span class="string">"a"</span>(in_a),<span class="string">"b"</span>(in_b));</span><br><span class="line"><span class="keyword">asm</span>(<span class="string">"addl %2, %1"</span>:<span class="string">"=a"</span>(out_sum):<span class="string">"a"</span>(in_a),<span class="string">"b"</span>(in_b));</span><br><span class="line"><span class="comment">//上面2行代码等价</span></span><br><span class="line"><span class="comment">//"=a"(out_sum)序号为 0，%0 对应的是 eax。</span></span><br><span class="line"><span class="comment">//"a"(in_a)序号为 1，%1 对应的是 eax。</span></span><br><span class="line"><span class="comment">//"b"(in_b)序号为 2，%2 对应的是 ebx。</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>名称占位符</strong> 需要在 output 和 input 中把操作数显式地起个名字：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[名称] &quot;约束名&quot; (C 变量)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>操作数类型修饰符用来修饰所约束的操作数：内存、寄存器：<ul>
+<li>output<ul>
+<li>=，表示操作数是只写</li>
+<li>+，表示操作数可读写</li>
+<li>&amp;，表示此output中的操作数要独占所约束的寄存器，任何 input 中所分配的寄存器不能与之相同</li>
+</ul>
+</li>
+<li>input<ul>
+<li>%，该操作数可以和下一个操作数互换</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><code>reg5.c</code>  测试名称</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;stdio.h&gt; </span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">()</span> </span>&#123; </span><br><span class="line">	<span class="keyword">int</span> in_a = <span class="number">18</span>, in_b = <span class="number">3</span>, out = <span class="number">0</span>; </span><br><span class="line">	<span class="keyword">asm</span>(<span class="string">"divb %[divisor];movb %%al,%[result]"</span> \ </span><br><span class="line">	:[result]<span class="string">"=m"</span>(out) \ </span><br><span class="line">	:<span class="string">"a"</span>(in_a),[divisor]<span class="string">"m"</span>(in_b) \ </span><br><span class="line">	); </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"result is %d\n"</span>,out); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们的目的是用 18 除以 3，最后打印结果是 6。</p>
+<p>  <img src="https://inews.gtimg.com/newsapp_ls/0/13190602770/0" alt="image-20210216104402368"></p>
+<p><code>reg6.c</code> 测试 output 为 “+”</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt; </span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">()</span> </span>&#123; </span><br><span class="line">	<span class="keyword">int</span> in_a = <span class="number">1</span>, in_b = <span class="number">2</span>; </span><br><span class="line">	<span class="keyword">asm</span>(<span class="string">"addl %%ebx, %%eax;"</span>:<span class="string">"+a"</span>(in_a):<span class="string">"b"</span>(in_b)); </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"in_a is %d\n"</span>, in_a); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190602777/0" alt="image-20210216104440975"> </p>
+<p>reg7.c  gcc将</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt; </span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">()</span> </span>&#123; </span><br><span class="line">	<span class="keyword">int</span> ret_cnt = <span class="number">0</span>, test = <span class="number">0</span>; </span><br><span class="line">	<span class="keyword">char</span>* fmt = <span class="string">"hello,world\n"</span>; <span class="comment">// 共 12 个字符</span></span><br><span class="line">	<span class="keyword">asm</span>(<span class="string">" pushl %1; \ </span></span><br><span class="line"><span class="string">	call printf; \ </span></span><br><span class="line"><span class="string">	addl $4, %%esp; \ </span></span><br><span class="line"><span class="string">	movl $6, %2"</span> \ </span><br><span class="line">	:<span class="string">"=a"</span>(ret_cnt) \ </span><br><span class="line">	:<span class="string">"m"</span>(fmt),<span class="string">"r"</span>(test) \ </span><br><span class="line">	); </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"the number of bytes written is %d\n"</span>, ret_cnt); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190602783/0" alt="image-20210216110603813"></p>
+<p>按照猜测 call 完 返回eax 为 12 然后输出12</p>
+<p>然而在文件 reg7.c 的第 8 行，%2 被 gcc 分配为寄存器 eax 了。</p>
+<p>导致输出结果为 6 。</p>
+<p>reg8.c  测试 output 为“&amp;”</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt; </span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">()</span> </span>&#123; </span><br><span class="line">	<span class="keyword">int</span> ret_cnt = <span class="number">0</span>, test = <span class="number">0</span>; </span><br><span class="line">	<span class="keyword">char</span>* fmt = <span class="string">"hello,world\n"</span>; <span class="comment">// 共 12 个字符</span></span><br><span class="line">	<span class="keyword">asm</span>(<span class="string">" pushl %1; \ </span></span><br><span class="line"><span class="string">	call printf; \ </span></span><br><span class="line"><span class="string">	addl $4,%%esp; \ </span></span><br><span class="line"><span class="string">	movl $6, %2"</span> \ </span><br><span class="line">	:<span class="string">"=&amp;a"</span>(ret_cnt) \ </span><br><span class="line">	:<span class="string">"m"</span>(fmt),<span class="string">"r"</span>(test) \ </span><br><span class="line">	); </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"the number of bytes written is %d\n"</span>, ret_cnt); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190602790/0" alt="image-20210216112519086"> </p>
+<p>这时输出 12 。由于 &amp; 表示 output中的操作数要独占所约束的寄存器</p>
+<p><code>reg9.c</code> 测试 output 为 “%”</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	<span class="keyword">int</span> in_a = <span class="number">1</span>, sum = <span class="number">0</span>; </span><br><span class="line">	<span class="keyword">asm</span>(<span class="string">"addl %1, %0;"</span>:<span class="string">"=a"</span>(sum):<span class="string">"%I"</span>(<span class="number">2</span>),<span class="string">"0"</span>(in_a)); </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"sum is %d\n "</span>, sum); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在这个输入中，还用到了修饰符’%’，这表示约束 I 对应的操作数可以和下一个输入所约束的操作数对换位置。</p>
+<p>下一个输入是”0”（in_a），前面用了通用约束’0’，这表示,要求 gcc 把分配给 C 变量 in_a 的操作数（寄存器或内存）同序号 0 对应的汇编操作数一样，in_a 与 sum 所用的寄存器是一样的，都是 eax。( 类似于 “+ ”</p>
+<p><strong>c语言中的volatile作用（同扩展内联汇编中的memory）</strong></p>
+<p>内存约束的内存地址，编译器可以知道，但如果有内存在汇编执行过程中被修改，就需要用在clobber/modify中加入“memory”来告诉gcc了。</p>
+<p>memeory声明的另个作用是清除寄存器缓存：<br>内存的访问速度比cpu中的寄存器来说是比较慢的，所以gcc为了提速，把可能常用到的变量存入寄存器中，但这就带来一个问题，编译器编译程序时不知道变量的内存是否会发生变化，也就是说在程序运行过程中变量所在的内存可能会变化，<strong>改变的时间可以在CPU的线程调度过程，地点是其他线程的代码运行中</strong>。这就导致寄存器的值是“过时”的值。</p>
+<p><code>main.c</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    i = <span class="number">1</span>;</span><br><span class="line">    i = <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">return</span> i;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//没优化情况下</span></span><br><span class="line">mov dword ptr[ebp<span class="number">-4</span>],<span class="number">1</span></span><br><span class="line">mov dword ptr[ebp<span class="number">-4</span>],<span class="number">2</span></span><br><span class="line">mov eax,dword ptr[ebp<span class="number">-4</span>]	<span class="comment">//访问内存的值</span></span><br><span class="line">ret</span><br><span class="line"><span class="comment">//优化情况下</span></span><br><span class="line">mov eax,<span class="number">2</span>	<span class="comment">//直接把变量的值放入寄存器中，[ebp-4]地址处的值如果变化，结果就会错误！</span></span><br><span class="line">ret</span><br></pre></td></tr></table></figure>
+
+<p>因此volatile修饰变量，编译器就会放弃寄存器缓存的方法，采用<strong>标准寻址</strong><br>memory声明告诉编译器变量所在的内存数据会改变，这样就可以从内存再读取一次新数据</p>
+<h4 id="机器模式简介"><a href="#机器模式简介" class="headerlink" title="机器模式简介"></a>机器模式简介</h4><p><img src="https://inews.gtimg.com/newsapp_ls/0/13190602807/0" alt="image-20210216125542268"></p>
+<p>操作码就是指定操作数为寄存器中的哪个部分，初步了解h、b、W、K这几个操作码就够了。</p>
+<p>寄存器按是否可单独使用，可分成几个部分，拿eax举例：</p>
+<ul>
+<li>低部分的一字节：al</li>
+<li>高部分的一字节：ah</li>
+<li>两字节部分：ax</li>
+<li>四字节部分：eax</li>
+</ul>
+<p>h：输出寄存器高位部分中的那一字节对应的寄存器名称，如ah、bh、ch、dh。</p>
+<p>b：输出寄存器中低部分1字节对应的名称，如al、bl、cl、d1。</p>
+<p>w：输出寄存器中大小为2个字节对应的部分，如ax、bx、ex、dx。</p>
+<p>k：输出寄存器的四字节部分，如eax、ebx、ecx、edx。</p>
+
+      
+      <!-- reward -->
+      
+      <div id="reward-btn">
+        Reward
+      </div>
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+        <div class="declare">
+          <ul class="post-copyright">
+            <li>
+              <i class="ri-copyright-line"></i>
+              <strong>Copyright： </strong>
+              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+            </li>
+          </ul>
+        </div>
+        
+    <footer class="article-footer">
+      
+          
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2021/02/21/cx4/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9C%9F%E8%B1%A1%E8%BF%98%E5%8E%9F/" rel="tag">操作系统真象还原</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+  
+  <nav class="article-nav">
+    
+      <a href="/2021/02/21/cx1/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            操作系统真象还原&lt;第一部分&gt;
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2021/02/21/cx5/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">操作系统真象还原&lt;第五部分&gt;</div>
+      </a>
+    
+  </nav>
+
+
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: '',
+        app_key: '',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'mp',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+
+</article>
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul class="list-inline">
+      <li>
+        &copy;
+        2015-2021
+        John Doe
+      </li>
+      <li>
+        
+        Powered by
+        
+        
+        <a href="https://hexo.io" target="_blank">Hexo</a> Theme <a href="https://github.com/Shen-Yu/hexo-theme-ayer" target="_blank">Ayer</a>
+        
+      </li>
+    </ul>
+    <ul class="list-inline">
+      <li>
+        
+        
+        <span>
+  <i>PV:<span id="busuanzi_value_page_pv"></span></i>
+  <i>UV:<span id="busuanzi_value_site_uv"></span></i>
+</span>
+        
+      </li>
+      
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="Hexo"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="Search">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+<script>
+  try {
+    var typed = new Typed("#subtitle", {
+      strings: ['你努力，剩下的交给我', '愿你一生努力，一生被爱', '想要的都拥有，得不到的都释怀'],
+      startDelay: 0,
+      typeSpeed: 200,
+      loop: true,
+      backSpeed: 100,
+      showCursor: true
+    });
+  } catch (err) {
+  }
+
+</script>
+
+
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+
+
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+
+<script type="text/javascript" src="https://js.users.51.la/20544303.js"></script>
+
+
+    
+  </div>
+</body>
+
+</html>

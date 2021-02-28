@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    操作系统真象还原&lt;第一部分&gt; |  Hexo
+  </title>
+  <meta name="generator" content="hexo-theme-yilia-plus">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+  
+  
+
+  
+
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    <main class="content on">
+      <section class="outer">
+  <article id="post-cx1" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  操作系统真象还原&lt;第一部分&gt;
+</h1>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/02/21/cx1/" class="article-date">
+  <time datetime="2021-02-20T16:00:00.000Z" itemprop="datePublished">2021-02-21</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">操作系统</a>
+  </div>
+
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">14.2k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">56 min</span>
+        </span>
+    </span>
+</div>
+
+      
+    </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>(｡･∀･)ﾉﾞ嗨起来！！！</p>
+<a id="more"></a>
+
+<h1 id="介绍及其问题"><a href="#介绍及其问题" class="headerlink" title="介绍及其问题"></a>介绍及其问题</h1><p>如何访问到 IO 接口呢？<br>答案就是 <strong>IO 接口上面有一些寄存器，访问 IO 接口本质上就是访问这些寄存器</strong>，这些寄存器就是人们常说的端口。这些端口是人家 IO 接口给咱们提供的接口。人家接口电路也有自己的思维（系统），看到寄存器中写了什么就做出相应的反应。</p>
+<p>用户态与内核态是对 CPU 来讲的，是指 CPU 运行在用户态（特权 3 级）还是内核态（特权 0 级），很多人误以为是对用户进程来讲的。</p>
+<p><strong>用户进程陷入内核态是指</strong>：由于内部或外部中断发生，当前进程被暂时终止执行，其上下文被内核的中断程序保存起来后，开始执行一段内核的代码。是内核的代码，不是用户程序在内核的代码，用户代码怎么可能在内核中存在，所以<strong>“用户态与内核态”是对 CPU 来说的</strong>。</p>
+<p>当应用程序陷入内核后，它自己已经下 CPU 了，以后发生的事，应用程序完全不知道，它的上下文环境已经被保存到自己的 0 特权级栈中了，那时在 CPU 上运行的程序已经是内核程序了。所以要清楚，<strong>内核代码并不是成了应用程序的内核化身，操作系统是独立的部分</strong>，用户进程永远不会因为进入内核态而变身为操作系统了。</p>
+<p>1M 是 2 的 20 次方，1MB 内存需要 20 位的地址 才能访问到，<br>如何做到用 16 位寄存器访问 20 位地址空间呢？<br>在 8086 的寻址方式中，<strong>有基址寻址</strong>，这是用基址寄存器 bx 或 bp 来提供偏移地址的，如“mov [bx]，0x5；”指令便是将立即数 0x5 存入 ds：bx 指向的内存。( <strong>直接寻址</strong></p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190598107/0" alt="image-20201013164456919"></p>
+<p>这是因为 CPU 设计者在地址处理单元中动了手脚，该地址部件接到“<strong>段基址+段内偏移地址</strong>”的地址后，自动将段基址乘以 16，即左移了 4 位，然后再和 16 位的段内偏移地址相加，这下地址变成了 20 位了吧</p>
+<p><strong>Section Headers</strong>：列出了程序中所有的 section，这些 section 是 gcc 编译器帮忙划分的。<br><strong>Program Headers</strong>：列出了程序中的段，即 segment，这是程序中 section 合并后的结果。<br><strong>Section to Segment mapping</strong>：列出了一个 segment 中包含了哪些 section。</p>
+<p>CPU 内部的段寄存器（Segment reg）如下。<br>（1）<strong>CS—代码段寄存器（Code Segment Register）</strong>，其值为代码段的段基值。<br>（2）<strong>DS—数据段寄存器（Data Segment Register）</strong>，其值为数据段的段基值。<br>（3）<strong>ES—附加段寄存器（Extra Segment Register）</strong>，其值为附加数据段的段基值，称为“附加”是因为此段寄存器用途不像其他 sreg 那样固定，可以额外做他用。<br>（4）<strong>FS—附加段寄存器（Extra Segment Register）</strong>，其值为附加数据段的段基值，同上，用途不固定，使用上灵活机动。<br>（5）<strong>GS—附加段寄存器（Extra Segment Register）</strong>，其值为附加数据段的段基值。<br>（6）<strong>SS—堆栈段寄存器（Stack Segment Register）</strong>，其值为堆栈段的段值。</p>
+<p><strong>OSI 七层模型</strong>，<br>它规定数据的第一层，也就是<strong>最外层物理层</strong>，这一层包含的是<strong>电路相关的数据</strong>。发送方和接收方都彼此认同最外层的就是电路传输用的数据。每一层中的前几个固定的字节必须是描述当前层的属性，根据此属性就能找到需要的数据。各层中的数据部分都是更上一层的数据，如第一层（<strong>物理层</strong>）中的数据部分是第二层（<strong>数据链路层</strong>）的属性+数据，第三层（<strong>网络</strong>）的数据部分是第四层（<strong>传输层</strong>）TCP 或 UDP 的属性+数据。各层都是如此，直到第七层（<strong>应用层</strong>）的数据部分才是真正应用软件所需要的数据。由此可见，对方一大串数据发过来后，经过层层剥离处理，到了最终的接收方（应用软件），只是一小点啦。</p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190598126/0" alt="image-20201013165647506"></p>
+<p>C 程序大体上分为 <strong>预处理、编译、汇编和链接</strong> 4 个阶段。<br><strong>预处理阶段</strong>是预处理器将高级语言中的宏展开，去掉代码注释，为调试器添加行号等。<br><strong>编译阶段</strong>是将预处理后的高级语言进行词法分析、语法分析、语义分析、优化，最后生成汇编代码。<br><strong>汇编阶段</strong>是将汇编代码编译成目标文件，也就是转换成了目标机器平台上的机器指令。<br><strong>链接阶段</strong>是将目标文件连接成可执行文件。</p>
+<p><strong>MBR 与 EBR 介绍</strong></p>
+<p><strong>MBR</strong> 和 <strong>EBR</strong> 是<strong>分区工具创建维护的</strong>，不属于操作系统管理的范围，因此操作系统不可以往里面写东 西，注意这里所说的是“不可以”，其实操作系统是有能力读写任何地址的，只是如果这样做的话会破坏 “系统控制权接力赛”所使用的数据，下次开机后就无法启动了。<strong>OBR</strong> 是各分区（<strong>主分区或逻辑分区</strong>）最 开始的扇区，因此属于操作系统管理。</p>
+<p> <strong>DBR、OBR、MBR、EBR</strong> 都包含引导程序，因此它们都称为<strong>引导扇区</strong>，只要该扇区中存在可执行的 程序，该扇区就是可引导扇区。若该扇区位于整个硬盘最开始的扇区，并且以 <strong>0x55</strong> 和 <strong>0xaa</strong> 结束，BIOS 就认为该扇区中存在 <strong>MBR</strong>，该扇区就是 <strong>MBR 引导扇区</strong>。若该扇区位于各分区最开始的扇区，并且以 <strong>0x55</strong> 和 <strong>0xaa</strong> 结束，<strong>MBR</strong> 就认为该扇区中有操作系统引导程序 <strong>OBR</strong>，该扇区就是 <strong>OBR 引导扇区</strong>。</p>
+<p><strong>DBR、OBR、MBR、EBR</strong> 结构中都有引导代码和结束标记 <strong>0x55</strong> 和 <strong>0xaa</strong>，它们最大的区别是分区表只在 <strong>MBR</strong> 和 <strong>EBR</strong> 中存在，<strong>DBR</strong> 或 <strong>OBR</strong> 中绝对没有分区表。</p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190598141/0" alt="image-20201013170354801"></p>
+<p>在 CPU 眼里，为什么我们插在主板上的物理内存不是它眼里“全部的内存”。 地址总线宽度决定了可以访问的内存空间大小，如 16 位机的地址总线为 20 位，其地址范围是 1MB，32 位地址总线宽度是 32 位，其地址范围是 4GB。但以上的地址范围是指地址总线可以触及到的边界，是指计算机在寻址上可以到达的疆域。</p>
+<p>物理内存多大都没用，主要是看地线总线的宽度。还要看地址总线的设计，是不是全部用于访问 DRAM。所以说，地址总线是决定我们访问哪里、访问什么，以及访问范围的关键。</p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190598150/0" alt=""></p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190598181/0" alt="image-20201014144139482"></p>
+<p><strong>CPU工作原理</strong>：控制单元要取下一条待运行的指令，该指令的地址在<strong>程序计数器 PC</strong> 中，在 x86CPU 上，程序计数器就是 <strong>cs：ip</strong>。于是读取 <strong>ip寄存器</strong>后，将此地址送上<strong>地址总线</strong>，CPU 根据此地址便得到了指令，并将其存入到<strong>指令寄存器 IR</strong> 中。这时候轮到指令译码器上场了，它根据指令格式检查指令寄存器中的指令，先确定<strong>操作码是什么</strong>，再检查<strong>操作数类型</strong>，若是在内存中，就将相应操作数 从内存中取回放入自己的存储单元，若操作数是在寄存器中就直接用了，免了取操作数这一过程。操作码有了， 操作数也齐了，操作控制器给运算单元下令，开工，于是运算单元便真正开始执行指令了。<strong>ip 寄存器的值</strong>被加上<strong>当前指令的大小</strong>，于是 ip又指向了下一条指令的地址。接着控制单元又要取下一条指令了，流程回到了本段开头，CPU 便开始了日复一日的循环，由于 CPU 特别不容易坏，所以唯一它停下来的条件就是停电。</p>
+<p>CPU 中的<strong>一级缓存 L1</strong>、<strong>二级缓存 L2</strong>，它们都是 <strong>SRAM</strong>，即静态随机访问存储器，它是最快的存储器。<strong>SRAM</strong> 是用寄存器来<strong>存储数据的</strong>，这就是 SRAM <strong>快</strong>的原因。寄存器是使用<strong>触发器</strong>实现的，这也是一种<strong>存储电路</strong>，工作速度极快，是<strong>纳秒级别</strong>的。</p>
+<p><strong>CPU 中的寄存器大致上分为两大类。</strong></p>
+<ol>
+<li><strong>第一类</strong>是其<strong>内部使用</strong>的，对程序员<strong>不可见</strong>。“是否可见”不是说寄存器是否能看得见，是指程序员<strong>是否能使用</strong>。CPU 内部有其自己的运行机制，是按照某个预定框架进行的，为了CPU 能够运行下去，必然会有一些寄存器来做<strong>数据的支撑</strong>，给 CPU 内部的数据提供<strong>存储空间</strong>。这一部分对外是不可见的，我们<strong>无法使用它们</strong>，比如全局描述符表寄存器 GDTR、中断描述符表寄存器 IDTR、局部描述符表寄存器 LDTR、 任务寄存器 TR、控制寄存器 CR0～3、指令指针寄存器 IP、标志寄存器 flags、调试寄存器 DR0～7。</li>
+<li><strong>第二类</strong>是对程序员<strong>可见</strong>的寄存器。我们进行汇编语言程序设计时，能够直接操作的就是这些寄存器，如段寄存器、通用寄存器。</li>
+</ol>
+<p><strong>通用寄存器</strong></p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190598205/0" alt="image-20201014150329706"></p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190598228/0" alt="image-20201014150218707"></p>
+<p><strong>CPU8086寻址方式</strong>，从大方向来看可以分为三大类：<br>（1）寄存器寻址；<br>（2）立即数寻址；<br>（3）内存寻址。<br>在第三种内存寻址中又分为：<br>（1）直接寻址；<br>（2）基址寻址；<br>（3）变址寻址；<br>（4）基址变址寻址。</p>
+<p><strong>标志位寄存器</strong></p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190598241/0" alt="image-20201014163727780"></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">以下标志位仅在 8088 以上 CPU 中有效。</span><br><span class="line"></span><br><span class="line">第 0 位的是 CF 位，即 Carry Flag，意为进位。运算中，数值的最高位有可能是进位，也有可能是借位，所以 carry 表示 这两种状态。不管最高位是进位，还是借位，CF 位都会置 1，否则为 0。它可用于检测无符号数加减法是否有溢出，因为 CF 为 1 时，也就是最高位有进位或借位，肯定是溢出。</span><br><span class="line">再说点没用的，第 1、3、5、15 位没有专门的标志位，空着占位用。</span><br><span class="line">第 2 位为 PF 位，即 Parity Flag，意为奇偶位。用于标记结果低 8 位中 1 的个数，如果为偶数，PF 位</span><br><span class="line">为 1，否则为 0。注意啦，是最低的那 8 位，不管操作数是 16 位，还是 32 位。奇偶校验经常用于数据传</span><br><span class="line">输开始时和结束后的对比，判断传输过程中是否出现错误。</span><br><span class="line">第 4 位为 AF 位，即 Auxiliary carry Flag，意为辅助进位标志，用来记录运算结果低 4 位的进、借位</span><br><span class="line">情况，即若低半字节有进、借位，AF 为 1，否则为 0。</span><br><span class="line">第 6 位为 ZF 位，即 Zero Flag，意为零标志位。若计算结果为 0，此标志为 1，否则为 0。</span><br><span class="line">第 7 位为 SF 位，即 Sign Flag，意为符号标志位。若运算结果为负，则 SF 位为 1，否则为 0</span><br><span class="line">第 8 位为 TF 位，即 Trap Flag，意为陷阱标志位。此位若为 1，用于让 CPU 进入单步运行方式，若为0，则为连续工作的方式。平时我们用的 debug 程序，在单步调试时，原理上就是让 TF 位为 1。可见，软件上的很多功能，必须有硬件的原生支持才能得以实现。</span><br><span class="line">第 9 位为 IF 位，即 Interrupt Flag，意为中断标志位。若 IF 位为 1，表示中断开启，CPU 可以响应外部可屏蔽中断。若为 0，表示中断关闭，CPU 不再响应来自 CPU 外部的可屏蔽中断，但 CPU 内部的异常还是要响应的，因为它关不住。</span><br><span class="line">第 10 位为 DF 位，即 Direction Flag，意为方向标志位。此标志位用于字符串操作指令中，当 DF 为 1 时，指令中的操作数地址会自动减少一个单位，当 DF 为 0 时，指令中的操作数地址会自动增加一个单位，意即给地址的变化提供个方向。其中提到的这个单位的大小，取决于用什么指令。</span><br><span class="line">第 11 位为 OF 位，即 Overflow Flag，意为溢出标志位。用来标识计算的结果是否超过了数据类型可</span><br><span class="line">表示的范围，若超出了范围，就像水从锅里溢出去了一样。若 OF 为 1，表示有溢出，为 0 则未发生溢出。</span><br><span class="line">专门用于检测有符号数运算结果是否有溢出现象。</span><br><span class="line"></span><br><span class="line">以下标志位仅在 80286 以上 CPU 中有效。相对于 8088，它支持特权级和多任务。</span><br><span class="line">第 12～13 位为 IOPL，即 Input Output Privilege Level，这用在有特权级概念的 CPU 中。有 4 个任务特权级，即特权级 0、特权级 1、特权级 2 和特权级 3。故 IOPL 要占用 2 位来表示这 4 种特权级。如果您对此感到迷茫，不用担心，这些将来咱们在保护模式下也得实践。</span><br><span class="line">第 14 位为 NT，即 Nest Task，意为任务嵌套标志位。8088 支持多任务，一个任务就是一个进程。当一个任务中又嵌套调用了另一个任务（进程）时，此 NT 位为 1，否则为 0。</span><br><span class="line"></span><br><span class="line">以下标志位仅用于 80386 以上的 CPU。</span><br><span class="line">第 16 位为 RF 位，即 Resume Flag，意即恢复标志位。该标志位用于程序调试，指示是否接受调试故</span><br><span class="line">障，它需要与调试寄存器一起使用。当 RF 为 1 时忽略调试故障，为 0 时接受。</span><br><span class="line">第 17 位为 VM 位，即 Virtual 8086 Model，意为虚拟 8086 模式。这是实模式向保护模式过渡时的产物，现在已经没有了。CPU 有了保护模式后，功能更加强大了，但为了兼容实模式下的用户程序，允许将此位置为 1，这样便可以在保护模式下运行实模式下的程序了。实模式下的程序不支持多任务，而且程序中的地址就是真实的物理地址。所以在保护模式下每运行一个实模式下的程序，就要为其虚拟一个实模式环境，故称为虚拟模式。</span><br><span class="line"></span><br><span class="line">以下标志位仅用于 80486 以上的 CPU。</span><br><span class="line">第 18 位为 AC 位，即 Alignment Check，意为对齐检查。什么是对齐呢？是指程序中的数据或指令其内存地址是否是偶数，是否是 16、32 的整数倍，没有余数，这样硬件每次对地址以自增地方式（每次自加 2、16、32 等）访问内存时，自增后的地址正好对齐数据所在的起始地址上，这就是对齐的原理。对齐并不是软件逻辑中的要求，而是硬件上的偏好，如果待访问的内存地址是 16 或 32 的整数倍，硬件上好处理，所以运行较快。若 AC 位为 1 时，则进行地址对齐检查，为 0 时不检查。</span><br><span class="line"></span><br><span class="line">以下标志位只对 80586（奔腾）以上 CPU 有效。</span><br><span class="line">第 19 位为 VIF 位，即 Virtual Interrupt Flag，意为虚拟中断标志位，虚拟模式下的中断标志。</span><br><span class="line">第 20 位为 VIP 位，即 Virtual Interrupt Pending，意为虚拟中断挂起标志位。在多任务情况下，为操作</span><br><span class="line">系统提供的虚拟中断挂起信息，需要与 VIF 位配合。</span><br><span class="line">第 21 位为 ID 位，即 Identification，意思为识别标志位。系统经常要判断 CPU 型号，若 ID 为 1，表示当前 CPU 支持 CPU id 指令，这样便能获取 CPU 的型号、厂商等信息。若 ID 为 0，则表示当前 CPU 不支持 CPU id 指令。</span><br><span class="line">其余剩下的 22～31 位都没有实际用途，纯粹是占位用，为了将来扩展。</span><br></pre></td></tr></table></figure>
+
+<p>flags 寄存器一般与跳转有关联</p>
+<p>条件转移指令中所说的条件就是指标志寄存器中的标志位。</p>
+<p>jxx 中的 xx，就是各种条件的分类，每种 条件有不同的转移指令。</p>
+<p><img src="https://inews.gtimg.com/newsapp_ls/0/13190598262/0" alt="image-20201014164609509"></p>
+<p>这些转移指令是由意义明确的字符拼成的 。。。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">a 表示 above</span><br><span class="line">b 表示 below</span><br><span class="line">c 表示 carry</span><br><span class="line">e 表示 equal</span><br><span class="line">g 表示 great</span><br><span class="line">j 表示 jmp</span><br><span class="line">l 表示 less</span><br><span class="line">n 表示 not</span><br><span class="line">o 表示 overflow</span><br><span class="line">p 表示 parity</span><br></pre></td></tr></table></figure>
+
+<p>方便我们去记忆</p>
+<p><strong>摘录的一段话</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">如果您有一般的软件开发经验，就会了解，很少有程序能一下就编译通过。当然，如果您的编程经验 无比丰富，代码无比规范，无比了解编译器，确实不需要虚拟机来调试了，编写完成后直接就能运行。以 上我用了三个“无比”，打造了似乎没有人能达到这种水平的假象，其实是有的。不知道大家听说过 Jon Skeet 没有，他是谷歌软件工程师，《C# In Depth》就是他的作品。看看别人对他是怎样评价的，看完之后您就 知道我说的并不夸张了。</span><br><span class="line">“他并不需要调试器，只要他盯着代码看几眼，Bug 自己就跑出来了”。</span><br><span class="line">“他根本不需要什么编程规范，他的代码就是规范”。</span><br><span class="line">“如果他的代码没有通过编译，编译器厂商就会道歉”。</span><br></pre></td></tr></table></figure>
+
+<p>学无止境。。。。。。</p>
+<h1 id="部署环境"><a href="#部署环境" class="headerlink" title="部署环境"></a>部署环境</h1><p><strong>软件 是 VMware Workstation Pro</strong></p>
+<p><strong>虚拟机镜像 是 ubuntu 16.04 x64</strong></p>
+<p><strong>虚拟环境（加载在虚拟机中）:bochs-2.6.2</strong></p>
+<h2 id="Bochs-下载安装"><a href="#Bochs-下载安装" class="headerlink" title="Bochs 下载安装"></a>Bochs 下载安装</h2><p>官网 <a href="https://sourceforge.net/projects/bochs/files/bochs/" target="_blank" rel="noopener">https://sourceforge.net/projects/bochs/files/bochs/</a></p>
+<p>下载 <strong>bochs-2.6.2</strong> </p>
+<p>在虚拟机里面 解压压缩包 </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">--tar zxvf bochs-2.6.2.tar.gz</span><br><span class="line">--cd bochs-2.6.2</span><br></pre></td></tr></table></figure>
+
+<p>然后开始 <strong>configure、make、make install</strong> 三步曲</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">.&#x2F;configure \</span><br><span class="line">--prefix&#x3D;&#x2F;your_path&#x2F;bochs-2.6.2 \  </span><br><span class="line">--enable-debugger\</span><br><span class="line">--enable-disasm \</span><br><span class="line">--enable-iodebug \</span><br><span class="line">--enable-x86-debugger \</span><br><span class="line">--with-x \</span><br><span class="line">--with-x11 </span><br><span class="line"></span><br><span class="line">--prefix&#x3D;&#x2F;your_path&#x2F;bochs 是用来指定 bochs 的安装目录，根据个人实际情况将 your_path 替换为自己待安装的路径。</span><br><span class="line">--enable-debugger 打开 bochs 自己的调试器。</span><br><span class="line">--enable-disasm 使 bochs 支持反汇编。</span><br><span class="line">--enable-iodebug 启用 io 接口调试器。</span><br><span class="line">--enable-x86-debugger 支持 x86 调试器。</span><br><span class="line">--with-x 使用 x windows。</span><br><span class="line">--with-x11 使用 x11 图形用户接口。</span><br></pre></td></tr></table></figure>
+
+<p><strong>configure</strong> 之后，会生成 <strong>Makefile</strong>，可以开始编译了。</p>
+<p>如果报错 （ 其余报错 google 一般都有</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">undefined reference to &#39;pthread_create&#39;</span><br><span class="line">undefined reference to &#39;pthread_join&#39;</span><br></pre></td></tr></table></figure>
+
+<p>我们需要在 <strong>Makefile</strong>文件<code>LIBS =</code>这句最后面添加上<code>-lpthread</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LIBS &#x3D;  -lm -lgtk-x11-2.0 -lgdk-x11-2.0 -lpangocairo-1.0 -latk-1.0 -lcairo -lgdk_pixbuf-2.0 -lgio-2.0 -lpangoft2-1.0 -lpango-1.0 -lgobject-2.0 -lglib-2.0 -lfontconfig -lfreetype -lpthread</span><br></pre></td></tr></table></figure>
+
+<p>然后重新编译</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">--sudo make</span><br><span class="line">--sudo make install</span><br></pre></td></tr></table></figure>
+
+<h2 id="配置-bochs"><a href="#配置-bochs" class="headerlink" title="配置 bochs"></a>配置 bochs</h2><p>设置配置文件 bochsrc.disk 放在 bochs 安装目录下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"># Configuration file for Bochs</span><br><span class="line"># 运行过程中能够使用的内存，本例为 32MB。</span><br><span class="line"># 关键字为：megs</span><br><span class="line">megs： 32</span><br><span class="line"></span><br><span class="line"># 设置对应真实机器的 BIOS 和 VGA BIOS。</span><br><span class="line">romimage: file&#x3D;&#x2F;实际路径&#x2F;bochs-2.6.2&#x2F;share&#x2F;bochs&#x2F;BIOS-bochs-latest</span><br><span class="line">vgaromimage: file&#x3D;&#x2F;实际路径&#x2F;bochs-2.6.2&#x2F;share&#x2F;bochs&#x2F;VGABIOS-lgpl-latest</span><br><span class="line"></span><br><span class="line"># Bochs 所使用的磁盘，软盘的关键字为 floppy。</span><br><span class="line"># 若只有一个软盘，则使用 floppya 即可，若有多个，则为 floppya，floppyb…</span><br><span class="line">#floppya: 1_44&#x3D;a.img, status&#x3D;inserted</span><br><span class="line"></span><br><span class="line"># 选择启动盘符。</span><br><span class="line">#boot: floppy #默认从软盘启动，将其注释</span><br><span class="line">boot: disk #改为从硬盘启动。我们的任何代码都将直接写在硬盘上，所以不会再有读写软盘的操作。</span><br><span class="line"></span><br><span class="line"># 设置日志文件的输出。</span><br><span class="line">log: bochs.out</span><br><span class="line"></span><br><span class="line"># 开启或关闭某些功能。</span><br><span class="line"># 下面是关闭鼠标，并打开键盘。</span><br><span class="line">mouse: enabled&#x3D;0</span><br><span class="line">keyboard:keymap&#x3D;&#x2F;实际路径&#x2F;bochs-2.6.2&#x2F;share&#x2F;bochs&#x2F;keymaps&#x2F;x11-pc-us.map</span><br><span class="line"></span><br><span class="line"># 硬盘设置</span><br><span class="line">ata0: enabled&#x3D;1, ioaddr1&#x3D;0x1f0, ioaddr2&#x3D;0x3f0, irq&#x3D;14</span><br><span class="line"></span><br><span class="line"># 下面的是增加的 bochs 对 gdb 的支持，这样 gdb 便可以远程连接到此机器的 1234 端口调试了</span><br><span class="line"># gdbstub: enabled&#x3D;1, port&#x3D;1234, text_base&#x3D;0, data_base&#x3D;0, bss_base&#x3D;0</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">--sudo bin&#x2F;bochs -f bochsrc.disk</span><br><span class="line"></span><br><span class="line">出现 ...</span><br><span class="line">You can also start bochs with the -q option to skip these menus.</span><br><span class="line"></span><br><span class="line">1. Restore factory default configuration</span><br><span class="line">2. Read options from...</span><br><span class="line">3. Edit options</span><br><span class="line">4. Save options to...</span><br><span class="line">5. Restore the Bochs state from...</span><br><span class="line">6. Begin simulation</span><br><span class="line">7. Quit now</span><br><span class="line"></span><br><span class="line">Please choose one: [6]</span><br></pre></td></tr></table></figure>
+
+<p>回车后 会出现2个窗口</p>
+<p>在主窗口 输入c 进行进程，</p>
+<p>提示没有的这个“bootable device”就是启动盘，现在就创建启动盘吧。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">-fd 创建软盘。</span><br><span class="line">-hd 创建硬盘。</span><br><span class="line">-mode 创建硬盘的类型，有 flat、sparse、growing 三种。</span><br><span class="line">-size 指创建多大的硬盘，以 MB 为单位。</span><br><span class="line">-q 以静默模式创建，创建过程中不会和用户交互。</span><br><span class="line"></span><br><span class="line">bin&#x2F;bximage -hd -mode&#x3D;&quot;flat&quot; -size&#x3D;60 -q hd60M.img</span><br><span class="line">这个命令串中最后一个 hd60M.img 是咱们创建的虚拟硬盘的名称。</span><br></pre></td></tr></table></figure>
+
+<p>然后继续运行</p>
+<p>之前报错原因是 boot failed: could not read the boot disk，这是无法读取启动盘。</p>
+<p>而现在这里的报错是 boot failed: not a bootable disk，这 不是一个启动盘。（ 下部分解决</p>
+<p>其实在这里配置 就完了。。。</p>
+<h1 id="编写MBR主引导记录"><a href="#编写MBR主引导记录" class="headerlink" title="编写MBR主引导记录"></a>编写MBR主引导记录</h1><p>从按下主机上的 power 键后，第一个运行的软件是 BIOS。</p>
+<p>BIOS 全称叫 Base Input &amp; Output System，即基本输入输出系统。</p>
+<p><strong>实模式下1MB 内存的布局 ：</strong><img src="https://inews.gtimg.com/newsapp_ls/0/13190598291/0" alt="image-20201013211922504"></p>
+<p><strong>BIOS 的主要工作是</strong></p>
+<ol>
+<li><strong>检测、初始化硬件</strong>，怎么初始化的？硬件自己提 供了一些初始化的功能调用，BIOS 直接调用就好了。BIOS 还做了一件伟大的事情，</li>
+<li><strong>建立了中断向量表</strong>，这样 就可以通过“int 中断号”来实现相关的硬件调用，当然 BIOS 建立的这些功能就是对硬件的 IO 操作，也就是输入输出，但由于就 64KB 大小的空间，不可能把所有硬件的 IO 操作实现得面面俱到，而且也没必要实现那么多， 毕竟是在实模式之下，对硬件支持得再丰富也白搭，精彩的世界是在进入保护模式以后才开始，所以挑一些重要的、保证计算机能运行的那些硬件的基本 IO 操作，就行了。</li>
+<li><strong>校验启动盘中位于 0 盘 0 道 1 扇区的内容</strong>，在计算机中是习惯以 0 作为起始索引的，因为人们已经习惯了偏移量的概念， 无论是机器眼里和程序员眼里，用“相对”的概念，即偏移量来表示位置显得很直观，所以很多指令中的 操作数都是用偏移量表示的。0 盘 0 道 1 扇区本质上就相当于 0 盘 0 道 0 扇区。MBR 所在的位置是磁盘上最开始的那个扇区。此扇区末尾的两个字节分别是魔数 0x55 和 0xaa，BIOS 便认为此扇区中确实存在可执 行的程序（此程序便是久闻大名的主引导记录 MBR），便加载到物理地址 0x7c00，随 后跳转到此地址，继续执行。</li>
+</ol>
+<p>BIOS 跳转到 0x7c00 是用 jmp 0：0x7c00 实现的，这是 jmp 指令的直接绝对远转移 用法，段寄存器 cs 会被替换，这里的段基址是 0，即 cs 由之前的 0xf000 变成了 0。 如果此扇区的最后 2 个不是 0x55 和 0xaa，即使里面有可执行代码也无济于事了，BIOS 不认，它也 许还认为此扇区是没格干净呢。</p>
+<p>MBR 的大小必须是 512 字节，这是为了保证 0x55 和 0xaa 这两个 魔数恰好出现在该扇区的最后两个字节处，即第 510 字节处和第 511 字节处，这是按起始偏移为 0 算起的。 由于我们的 bochs 模拟的是 x86 平台，所以是小端字节序，故其最后两个字节内容是 0xaa55，写到一起后 似乎有点不认识了，不要怕，拆开就是 0x55 和 0xaa。</p>
+<p><strong>nasm的安装与使用</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">--sudo apt install nasm</span><br><span class="line"></span><br><span class="line">usage: nasm [-@ response file] [-o outfile] [-f format] [-l listfile]</span><br><span class="line">            [options...] [--] filename</span><br><span class="line">    or nasm -v (or --v) for version info</span><br><span class="line"></span><br><span class="line">    -t          assemble in SciTech TASM compatible mode</span><br><span class="line">    -g          generate debug information in selected format</span><br><span class="line">    -E (or -e)  preprocess only (writes output to stdout by default)</span><br><span class="line">    -a          don&#39;t preprocess (assemble only)</span><br><span class="line">    -M          generate Makefile dependencies on stdout</span><br><span class="line">    -MG         d:o, missing files assumed generated</span><br><span class="line">    -MF &lt;file&gt;  set Makefile dependency file</span><br><span class="line">    -MD &lt;file&gt;  assemble and generate dependencies</span><br><span class="line">    -MT &lt;file&gt;  dependency target name</span><br><span class="line">    -MQ &lt;file&gt;  dependency target name (quoted)</span><br><span class="line">    -MP         emit phony target</span><br><span class="line"></span><br><span class="line">    -Z&lt;file&gt;    redirect error messages to file</span><br><span class="line">    -s          redirect error messages to stdout</span><br><span class="line"></span><br><span class="line">    -F format   select a debugging format</span><br><span class="line"></span><br><span class="line">    -o outfile  write output to an outfile</span><br><span class="line"></span><br><span class="line">    -f format   select an output format</span><br><span class="line"></span><br><span class="line">    -l listfile write listing to a listfile</span><br><span class="line"></span><br><span class="line">    -I&lt;path&gt;    adds a pathname to the include file path</span><br><span class="line">    -O&lt;digit&gt;   optimize branch offsets</span><br><span class="line">                -O0: No optimization</span><br><span class="line">                -O1: Minimal optimization</span><br><span class="line">                -Ox: Multipass optimization (default)</span><br><span class="line"></span><br><span class="line">    -P&lt;file&gt;    pre-includes a file</span><br><span class="line">    -D&lt;macro&gt;[&#x3D;&lt;value&gt;] pre-defines a macro</span><br><span class="line">    -U&lt;macro&gt;   undefines a macro</span><br><span class="line">    -X&lt;format&gt;  specifies error reporting format (gnu or vc)</span><br><span class="line">    -w+foo      enables warning foo (equiv. -Wfoo)</span><br><span class="line">    -w-foo      disable warning foo (equiv. -Wno-foo)</span><br><span class="line"></span><br><span class="line">    -h          show invocation summary and exit</span><br><span class="line"></span><br><span class="line">--prefix,--postfix</span><br><span class="line">  this options prepend or append the given argument to all</span><br><span class="line">  extern and global variables</span><br></pre></td></tr></table></figure>
+
+<p> <strong>开始代码啦</strong></p>
+<p>功能：在屏幕上打印字符串“1 MBR”，背景色为黑色，前景色为绿色。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line">;主引导程序</span><br><span class="line">;------------------------------------------------------------</span><br><span class="line">SECTION MBR vstart&#x3D;0x7c00</span><br><span class="line">mov ax,cs</span><br><span class="line">mov ds,ax</span><br><span class="line">mov es,ax</span><br><span class="line">mov ss,ax</span><br><span class="line">mov fs,ax</span><br><span class="line">mov sp,0x7c00</span><br><span class="line">; 清屏利用 0x06 号功能,上卷全部行,则可清屏｡</span><br><span class="line">; -----------------------------------------------------------</span><br><span class="line">;INT 0x10 功能号:0x06 功能描述:上卷窗口</span><br><span class="line">;------------------------------------------------------</span><br><span class="line">;输入:</span><br><span class="line">;AH 功能号&#x3D; 0x06</span><br><span class="line">;AL &#x3D; 上卷的行数(如果为 0,表示全部)</span><br><span class="line">;BH &#x3D; 上卷行属性</span><br><span class="line">;(CL,CH) &#x3D; 窗口左上角的(X,Y)位置</span><br><span class="line">;(DL,DH) &#x3D; 窗口右下角的(X,Y)位置</span><br><span class="line">;无返回值:</span><br><span class="line">mov ax, 0x600</span><br><span class="line">mov bx, 0x700</span><br><span class="line">mov cx, 0 ; 左上角: (0, 0)</span><br><span class="line">mov dx, 0x184f ; 右下角: (80,25),</span><br><span class="line">; VGA 文本模式中,一行只能容纳 80 个字符,共 25 行｡</span><br><span class="line">; 下标从 0 开始,所以 0x18&#x3D;24,0x4f&#x3D;79</span><br><span class="line">int 0x10 ; int 0x10</span><br><span class="line"></span><br><span class="line">;;;;;;;;; 下面这三行代码获取光标位置 ;;;;;;;;;</span><br><span class="line">;.get_cursor 获取当前光标位置,在光标位置处打印字符｡</span><br><span class="line">mov ah, 3 ; 输入: 3 号子功能是获取光标位置,需要存入 ah 寄存器</span><br><span class="line">mov bh, 0 ; bh 寄存器存储的是待获取光标的页号</span><br><span class="line"></span><br><span class="line">int 0x10 ; 输出: ch&#x3D;光标开始行,cl&#x3D;光标结束行</span><br><span class="line">; dh&#x3D;光标所在行号,dl&#x3D;光标所在列号</span><br><span class="line"></span><br><span class="line">;;;;;;;;; 获取光标位置结束 ;;;;;;;;;;;;;;;;</span><br><span class="line"></span><br><span class="line">;;;;;;;;; 打印字符串 ;;;;;;;;;;;</span><br><span class="line">;还是用 10h 中断,不过这次调用 13 号子功能打印字符串</span><br><span class="line">mov ax, message</span><br><span class="line">mov bp, ax ; es:bp 为串首地址,es 此时同 cs 一致,</span><br><span class="line">; 开头时已经为 sreg 初始化</span><br><span class="line"></span><br><span class="line">; 光标位置要用到 dx 寄存器中内容,cx 中的光标位置可忽略</span><br><span class="line">mov cx, 5 ; cx 为串长度,不包括结束符 0 的字符个数</span><br><span class="line">mov ax, 0x1301 ;子功能号 13 显示字符及属性,要存入 ah 寄存器,</span><br><span class="line">; al 设置写字符方式 ah&#x3D;01: 显示字符串,光标跟随移动</span><br><span class="line">;（1）al&#x3D;0，显示字符串，并且光标返回起始位置。</span><br><span class="line">;（2）al&#x3D;1，显示字符串，并且光标跟随到新位置。</span><br><span class="line">;（3）al&#x3D;2，显示字符串及其属性，并且光标返回起始位置。</span><br><span class="line">;（4）al&#x3D;3，显示字符串及其属性，光标跟随到新位置。</span><br><span class="line">mov bx, 0x2 ; bh 存储要显示的页号,此处是第 0 页,</span><br><span class="line">; bl 中是字符属性,属性黑底绿字(bl &#x3D; 02h)</span><br><span class="line">int 0x10 ; 执行 BIOS 0x10 号中断</span><br><span class="line">;;;;;;;;; 打字字符串结束 ;;;;;;;;;;;;;;;</span><br><span class="line"></span><br><span class="line">jmp $ ; 使程序悬停在此</span><br><span class="line"></span><br><span class="line">message db &quot;1 MBR&quot;</span><br><span class="line">times 510-($-$$) db 0</span><br><span class="line">db 0x55,0xaa</span><br></pre></td></tr></table></figure>
+
+<p><strong>$$</strong> 是指本 <strong>section</strong> 的起始地址，上面说过了 <strong>$</strong> 是本行所在的地址，故 <strong>$-$$</strong> 是本行到 <strong>本 section 的偏移量</strong>。由于 <strong>MBR</strong> 的最后两个字节是固定的内容，分别是 <strong>0x55</strong> 和 <strong>0xaa</strong>，要预留出这 2 个字节，故本 扇区内前 512-2=510 字节要填满，用 510 字节减去上面通过 <strong>$-$$</strong> 得到的偏移量，其结果便是本扇区内的剩余量，也就是要填充的字节数。由此可见 “<strong>times 510 -（$-$$） db 0</strong>” 是在用 0 将本扇区剩余空间填充。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line">编译</span><br><span class="line">--nasm -o mbr.bin mbr.S</span><br><span class="line"></span><br><span class="line">Linux 命令：dd</span><br><span class="line">dd 是用于磁盘操作的命令，可以深入磁盘的任何一个扇区，它也可以删除 Linux 操作系统自己的文件。</span><br><span class="line">-- dd --help</span><br><span class="line">用法：dd [操作数] ...</span><br><span class="line">　或：dd 选项</span><br><span class="line">　</span><br><span class="line">Copy a file, converting and formatting according to the operands.</span><br><span class="line">  bs&#x3D;BYTES        read and write up to BYTES bytes at a time</span><br><span class="line">  cbs&#x3D;BYTES       convert BYTES bytes at a time</span><br><span class="line">  conv&#x3D;CONVS      convert the file as per the comma separated symbol list</span><br><span class="line">  count&#x3D;N         copy only N input blocks</span><br><span class="line">  ibs&#x3D;BYTES       read up to BYTES bytes at a time (default: 512)</span><br><span class="line">  if&#x3D;FILE         read from FILE instead of stdin</span><br><span class="line">  iflag&#x3D;FLAGS     read as per the comma separated symbol list</span><br><span class="line">  obs&#x3D;BYTES       write BYTES bytes at a time (default: 512)</span><br><span class="line">  of&#x3D;FILE         write to FILE instead of stdout</span><br><span class="line">  oflag&#x3D;FLAGS     write as per the comma separated symbol list</span><br><span class="line">  seek&#x3D;N          skip N obs-sized blocks at start of output</span><br><span class="line">  skip&#x3D;N          skip N ibs-sized blocks at start of input</span><br><span class="line">  status&#x3D;LEVEL    The LEVEL of information to print to stderr;</span><br><span class="line">                  &#39;none&#39; suppresses everything but error messages,</span><br><span class="line">                  &#39;noxfer&#39; suppresses the final transfer statistics,</span><br><span class="line">                  &#39;progress&#39; shows periodic transfer statistics</span><br><span class="line"></span><br><span class="line">N and BYTES may be followed by the following multiplicative suffixes:</span><br><span class="line">c &#x3D;1, w &#x3D;2, b &#x3D;512, kB &#x3D;1000, K &#x3D;1024, MB &#x3D;1000*1000, M &#x3D;1024*1024, xM &#x3D;M</span><br><span class="line">GB &#x3D;1000*1000*1000, G &#x3D;1024*1024*1024, and so on for T, P, E, Z, Y.</span><br><span class="line"></span><br><span class="line">Each CONV symbol may be:</span><br><span class="line">  ascii     from EBCDIC to ASCII</span><br><span class="line">  ebcdic    from ASCII to EBCDIC</span><br><span class="line">  ibm       from ASCII to alternate EBCDIC</span><br><span class="line">  block     pad newline-terminated records with spaces to cbs-size</span><br><span class="line">  unblock   replace trailing spaces in cbs-size records with newline</span><br><span class="line">  lcase     change upper case to lower case</span><br><span class="line">  ucase     change lower case to upper case</span><br><span class="line">  sparse    try to seek rather than write the output for NUL input blocks</span><br><span class="line">  swab      swap every pair of input bytes</span><br><span class="line">  sync      pad every input block with NULs to ibs-size; when used</span><br><span class="line">            with block or unblock, pad with spaces rather than NULs</span><br><span class="line">  excl		fail if the output file already exists</span><br><span class="line">  nocreat	do not create the output file</span><br><span class="line">  notrunc	不截断输出文件</span><br><span class="line">  noerror	读取数据发生错误后仍然继续</span><br><span class="line">  fdatasync	结束前将输出文件数据写入磁盘</span><br><span class="line">  fsync	类似上面，但是元数据也一同写入</span><br><span class="line"></span><br><span class="line">FLAG 符号可以是：</span><br><span class="line"></span><br><span class="line">  append	追加模式(仅对输出有意义；隐含了conv&#x3D;notrunc)</span><br><span class="line">  direct	使用直接I&#x2F;O 存取模式</span><br><span class="line">  directory	除非是目录，否则 directory 失败</span><br><span class="line">  dsync		使用同步I&#x2F;O 存取模式</span><br><span class="line">  sync		与上者类似，但同时也对元数据生效</span><br><span class="line">  fullblock	为输入积累完整块(仅iflag)</span><br><span class="line">  nonblock	使用无阻塞I&#x2F;O 存取模式</span><br><span class="line">  noatime	不更新存取时间</span><br><span class="line">  nocache   Request to drop cache.  See also oflag&#x3D;sync</span><br><span class="line">  noctty	不根据文件指派控制终端</span><br><span class="line">  nofollow	不跟随链接文件</span><br><span class="line">  count_bytes  treat &#39;count&#x3D;N&#39; as a byte count (iflag only)</span><br><span class="line">  skip_bytes  treat &#39;skip&#x3D;N&#39; as a byte count (iflag only)</span><br><span class="line">  seek_bytes  treat &#39;seek&#x3D;N&#39; as a byte count (oflag only)</span><br><span class="line"></span><br><span class="line">Sending a USR1 signal to a running &#39;dd&#39; process makes it</span><br><span class="line">print I&#x2F;O statistics to standard error and then resume copying.</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">常用的几个 dd指令参数</span><br><span class="line">if&#x3D;FILE</span><br><span class="line">read from FILE instead of stdin</span><br><span class="line">此项是指定要读取的文件。</span><br><span class="line">of&#x3D;FILE</span><br><span class="line">write to FILE instead of stdout</span><br><span class="line">此项是指定把数据输出到哪个文件。</span><br><span class="line">bs&#x3D;BYTES</span><br><span class="line">read and write BYTES bytes at a time (also see ibs&#x3D;,obs&#x3D;)</span><br><span class="line">此项指定块的大小，dd 是以块为单位来进行 IO 操作的，得告诉人家块是多大字节。此项是统计配置</span><br><span class="line">了输入块大小 ibs 和输出块大小 obs。这两个可以单独配置。</span><br><span class="line">count&#x3D;BLOCKS</span><br><span class="line">copy only BLOCKS input blocks</span><br><span class="line">此项是指定拷贝的块数。</span><br><span class="line">seek&#x3D;BLOCKS</span><br><span class="line">skip BLOCKS obs-sized blocks at start of output</span><br><span class="line">此项是指定当我们把块输出到文件时想要跳过多少个块。</span><br><span class="line">conv&#x3D;CONVS</span><br><span class="line">convert the file as per the comma separated symbol list</span><br><span class="line">此项是指定如何转换文件。</span><br><span class="line">append append mode (makes sense only for output; conv&#x3D;notrunc suggested</span><br></pre></td></tr></table></figure>
+
+<p>介绍完了 指令dd 该我们安排了</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-- sudo dd if&#x3D;&#x2F;your_path&#x2F;mbr.bin of&#x3D;&#x2F;your_path&#x2F;bochs&#x2F;hd60M.img bs&#x3D;512 count&#x3D;1 conv&#x3D;notrunc</span><br><span class="line">-- sudo dd if&#x3D;&#x2F;home&#x2F;fyz&#x2F;sc&#x2F;bochs-2.6.2&#x2F;mbr.bin of&#x3D;&#x2F;home&#x2F;fyz&#x2F;sc&#x2F;bochs-2.6.2&#x2F;hd60M.img bs&#x3D;512 count&#x3D;1 conv&#x3D;notrunc</span><br></pre></td></tr></table></figure>
+
+<p>输入文件是刚刚编译出来的 <strong>mbr.bin</strong>，输出是我们虚拟出来的硬盘 <strong>hd60M.img</strong>，块大小指定为 512 字节， 只操作 1 块，即总共 1*512=512 字节。由于想写入第 0 块，所以没用 seek 指定跳过的块数。 执行上面的命令后，会有如下输出。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">记录了1+0 的读入</span><br><span class="line">记录了1+0 的写出</span><br><span class="line">512 bytes copied, 0.0248785 s, 20.6 kB&#x2F;s</span><br></pre></td></tr></table></figure>
+
+<p>mbr.bin 已经写进 hd60M.img 的第 0 块了。</p>
+<p>开始模拟了</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-- sudo bin&#x2F;bochs -f bochsrc.disk</span><br></pre></td></tr></table></figure>
+
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190598314/0" alt="image-20201014004258509"></p>
+<p>回车后 输入c继续 得到结果。。。</p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190598347/0" alt="image-20201014004414356"></p>
+<h2 id="完善-MBR"><a href="#完善-MBR" class="headerlink" title="完善 MBR"></a>完善 MBR</h2><p>先看下显卡各种模式的内存分布 <img src="https://inews.gtimg.com/newsapp_ls/0/13190598358/0" alt="image-20201014171240987"></p>
+<p>从起始地址 0xB8000 到 0xBFFFF，这片 32KB 大小的内存区域是用于文本显示。</p>
+<p>我们往 0xB8000 处输出的字符直接会落到显存中，显存中有了数据，自然显卡就将其搬到显示器屏幕上了，这后续的事情咱们是不需要处理的，咱们只要保证写进显存的数据是正确的就可以。</p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190598381/0" alt="image-20201014171446377"></p>
+<p>用 R 红色、G 绿色、B 蓝色这三种颜色以任意比例混 合，可以搭配出其他颜色，其他颜色被认为都可以由这三种颜色组合 而成。不过由于在文本模式下的颜色极其有限，RGB 的各部分比例要么是 1（全部），要么是 0（没有），所以其组合出的颜色屈指可数，为了让大家测试字符颜色更加方便， 给大家提供这三种颜色的组合。<img src="https://inews.gtimg.com/newsapp_ls/0/13190598401/0" alt="image-20201014171517655"></p>
+<p>改进 MBR，直接操作显卡 </p>
+<p>通过 BIOS 的输出改为通过显存。。。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">;主引导程序</span><br><span class="line">;</span><br><span class="line">;LOADER_BASE_ADDR equ 0xA000</span><br><span class="line">;LOADER_START_SECTOR equ 0x2</span><br><span class="line">;------------------------------------------------------------</span><br><span class="line">SECTION MBR vstart&#x3D;0x7c00</span><br><span class="line">mov ax,cs</span><br><span class="line">mov ds,ax</span><br><span class="line">mov es,ax</span><br><span class="line">mov ss,ax</span><br><span class="line">mov fs,ax</span><br><span class="line">mov sp,0x7c00</span><br><span class="line">mov ax,0xb800</span><br><span class="line">mov gs,ax</span><br><span class="line">;清屏</span><br><span class="line">;利用 0x06 号功能，上卷全部行，则可清屏</span><br><span class="line">; -----------------------------------------------------------</span><br><span class="line">;INT 0x10 功能号：0x06 功能描述：上卷窗口</span><br><span class="line">;------------------------------------------------------</span><br><span class="line">;输入：</span><br><span class="line">;AH 功能号&#x3D; 0x06</span><br><span class="line">;AL &#x3D; 上卷的行数（如果为 0，表示全部）</span><br><span class="line">;BH &#x3D; 上卷行属性</span><br><span class="line">;(CL,CH) &#x3D; 窗口左上角的(X,Y)位置</span><br><span class="line">;(DL,DH) &#x3D; 窗口右下角的(X,Y)位置</span><br><span class="line">;无返回值:</span><br><span class="line">mov ax, 0600h</span><br><span class="line">mov bx, 0700h</span><br><span class="line">mov cx, 0 ; 左上角: (0, 0)</span><br><span class="line">mov dx, 184fh ; 右下角: (80,25),</span><br><span class="line">; VGA 文本模式中，一行只能容纳 80 个字符，共 25 行</span><br><span class="line">; 下标从 0 开始，所以 0x18&#x3D;24，0x4f&#x3D;79</span><br><span class="line">int 10h ; int 10h</span><br><span class="line"></span><br><span class="line">; 输出背景色绿色，前景色红色，并且跳动的字符串&quot;1 MBR&quot; </span><br><span class="line">mov byte [gs:0x00],&#39;1&#39;</span><br><span class="line">mov byte [gs:0x01],0xA4 ; A 表示绿色背景闪烁，4 表示前景色为红色</span><br><span class="line">mov byte [gs:0x02],&#39; &#39;</span><br><span class="line">mov byte [gs:0x03],0xA4</span><br><span class="line"></span><br><span class="line">mov byte [gs:0x04],&#39;M&#39;</span><br><span class="line">mov byte [gs:0x05],0xA4</span><br><span class="line"></span><br><span class="line">mov byte [gs:0x06],&#39;B&#39;</span><br><span class="line">mov byte [gs:0x07],0xA4</span><br><span class="line"></span><br><span class="line">mov byte [gs:0x08],&#39;R&#39;</span><br><span class="line">mov byte [gs:0x09],0xA4</span><br><span class="line"></span><br><span class="line">jmp $ ; 通过死循环使程序悬停在此</span><br><span class="line"></span><br><span class="line">times 510-($-$$) db 0</span><br><span class="line">db 0x55,0xaa</span><br></pre></td></tr></table></figure>
+
+<p>编译 写入虚拟硬盘</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">编译</span><br><span class="line">--nasm -o mbr.bin mbr.S </span><br><span class="line">下面将生成的 mbr.bin 写入我们的虚拟硬盘，还是用 dd 命令。</span><br><span class="line">--sudo dd if&#x3D;&#x2F;your_path&#x2F;mbr.bin of&#x3D;&#x2F;your_path&#x2F;bochs&#x2F;hd60M.img bs&#x3D;512 count&#x3D;1 conv&#x3D;notrunc</span><br><span class="line">--sudo dd if&#x3D;&#x2F;home&#x2F;fyz&#x2F;sc&#x2F;bochs-2.6.2&#x2F;mbr.bin of&#x3D;&#x2F;home&#x2F;fyz&#x2F;sc&#x2F;bochs-2.6.2&#x2F;hd60M.img bs&#x3D;512 count&#x3D;1 conv&#x3D;notrunc</span><br><span class="line">模拟</span><br><span class="line">--sudo bin&#x2F;bochs -f bochsrc.disk</span><br></pre></td></tr></table></figure>
+
+<p> 结果</p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190598412/0" alt="image-20201014193903262"></p>
+<h2 id="让-MBR-使用硬盘"><a href="#让-MBR-使用硬盘" class="headerlink" title="让 MBR 使用硬盘"></a>让 MBR 使用硬盘</h2><h3 id="什么是硬盘？"><a href="#什么是硬盘？" class="headerlink" title="什么是硬盘？"></a>什么是硬盘？</h3><p>首先说一下硬盘的概念：英文名：Hard Disk Drive,简称HDD，硬盘是电脑主要的存储媒介之一，由一个或者多个铝制或者玻璃制的碟片组成。 这个就是一个硬盘：大部分的硬盘是由磁头臂组支架，转轴，读写头，磁头臂，磁道，扇区，柱面，盘面组成的。</p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190598424/0" alt="image-20201014202541118"></p>
+<p>磁头靠近主轴接触的表面，即线速度最小的地方，是一个特殊的区域，它不存放任何数据，称为启停区或着陆区（Landing Zone），启停区外就是数据区。在最外圈，离主轴最远的地放是“0”磁道，硬盘数据的存放就是从最外圈开始的。</p>
+<p><strong>盘面、磁道、柱面和扇区</strong></p>
+<p>硬盘的读写是和扇区有着紧密关系的。在说扇区和读写原理之前先说一下和扇区相关的”盘面”、“磁道”、和“柱面”。</p>
+<p><strong>1.盘面</strong>  ：硬盘的盘片一般用铝合金材料做基片，高速硬盘也可能用玻璃做基片。</p>
+<p><strong>2.磁道</strong> ：磁盘在格式化时被划分成许多同心圆，这些同心圆轨迹叫做磁道（Track）。磁道从外向内从0开始顺序编号。硬盘的每一个盘面有300～1 024个磁道，新式大容量硬盘每面的磁道数更多。</p>
+<p><strong>3.柱面</strong> ：所有盘面上的同一磁道构成一个圆柱，通常称做柱面（Cylinder），每个圆柱上的磁头由上而下从“0”开始编号。数据的读/写按柱面进行，即磁头读/写数据时首先在同一柱面内从“0”磁头开始进行操作，依次向下在同一柱面的不同盘面即磁头上进行操作，只在同一柱面所有的磁头全部读/写完毕后磁头才转移到下一柱面，因为选取磁头只需通过电子切换即可，而选取柱面则必须通过机械切换。</p>
+<p><strong>4.扇区</strong> ：操作系统以扇区（Sector）形式将信息存储在硬盘上，每个扇区包括512个字节的数据和一些其他信息。一个扇区有两个主要部分：<strong>存储数据地点的标识符</strong>和<strong>存储数据的数据段</strong>。扇区的<strong>第一个主要部分是标识符</strong>。包括组成扇区三维地址的三个数字：扇区所在的磁头（或盘面）、磁道（或柱面号）以及扇区在磁道上的位置即扇区号。扇区的<strong>第二个主要部分是存储数据的数据段</strong>。</p>
+<p><strong>硬盘的读写原理</strong></p>
+<p>系统将文件存储到磁盘上时，按柱面、磁头、扇区的方式进行，即最先是第1磁道的第一磁头下（也就是第1盘面的第一磁道）的所有扇区，然后，是同一柱面的下一磁头，……，一个柱面存储满后就推进到下一个柱面，直到把文件内容全部写入磁盘。</p>
+<p>系统也以相同的顺序读出数据。读出数据时通过告诉磁盘控制器要读出扇区所在的柱面号、磁头号和扇区号（物理地址的三个组成部分）进行。</p>
+<p>扇区到来时，磁盘控制器读出每个扇区的头标，把这些头标中的地址信息与 期待检出的磁头和柱面号做比较（即寻道），然后，寻找要求的扇区号。待磁盘控制器找到该扇区头标时，根据其任务是写扇区还是读扇区，来决定是转换写电路， 还是读出数据和尾部记录。</p>
+<p><strong>硬盘控制器端口</strong> </p>
+<p>硬盘控制器属于 IO 接口， 让硬盘工作，我们需要通过读写硬盘控制器的端口，端口的概念在此重复一下，端口就是位于 IO 控制器上的寄存器，此处的端口是指硬盘控制器上的寄存器。</p>
+<p>使用硬盘时的端口范围<img src="https://inews.gtimg.com/newsapp_ls/0/13190598467/0" alt="image-20201014203719299"></p>
+<p>端口可以被分为两组，<strong>Command Block registers</strong> 和 <strong>Control Block registers</strong>。Command Block registers 用于向硬盘驱动器写入命令字或者从硬盘控制器获得硬盘状态，Control Block registers 用于控制硬盘工作 状态。在 Control Block registers 组中的寄存器已经精减了，而且咱们基本上用不到。</p>
+<p>端口是按照<strong>通道</strong>给出的，一个通道上的<strong>主、从两块硬盘</strong>都用这些端口号。要想操作某通道上的某块硬盘，需要单独指定。 有个叫 <strong>device 的寄存器</strong>，顾名思义，指的就是<strong>驱动器设备</strong>，也就是和硬盘相关。不过此寄存器是 8 位的，一个通道上就两块硬盘，指定哪一个硬盘只用 1 位就够了，寄存器可是很宝贝的资源，不能浪费， 所以此寄存器是个杂项，很多设置都需集中在此寄存器中了，其中的第 4 位，便是指定通道上的主或从硬盘，<strong>0 为主盘，1 为从盘</strong>。</p>
+<p><strong>data 寄存器</strong> <strong>:</strong> <strong>负责管理数据的</strong>，它相当于数据的门，数据能进，也能出，所以其 作用是读取或写入数据。数据的读写还是越快越好，所以此寄存器较其他寄存器宽一些，16 位（已经很不错了，表中其他寄存器都是 8 位的）。在读硬盘时，硬盘准备好的数据后，硬盘控制器将其放在内部的缓冲区中，不断读此寄存器便是读出缓冲区中的全部数据。在写硬盘时，我们要把数据源源不断地输送到此端口， 数据便被存入缓冲区里，硬盘控制器发现这个缓冲区中有数据了，便将此处的数据写入相应的扇区中。</p>
+<p><strong>Error 寄存器 (Feature 寄存器)</strong> : 读硬盘时，<strong>端口 0x171 或 0x1F1 的寄存器</strong> ，只在<strong>读取硬盘失败</strong>时有用，里面才会记录失败的信息，尚未读取的扇区数在 <strong>Sector count 寄存器</strong>中。在写硬盘时，此寄存器有了别的用途，所以有了新的名字，叫 <strong>Feature 寄存器</strong>。有些命令需要指定额外参数，这些参数就写在 <strong>Feature 寄存器</strong>中。 强调一下，<strong>error 和 feature 这两个名字指的是同一个寄存器</strong>，只是因为不同环境下有不同的用途，为了区别这两种用途，所以在相应环境下有不同的名字。这两个寄存器都是 <strong>8 位宽度</strong>。</p>
+<p><strong>Sector count 寄存器</strong> : 用来指定待读取或待写入的扇区数。硬盘每完成一个扇区，就会将此寄存器的值减 1，所以如果中间失败了，此寄存器中的值便是尚未完成的扇区。这是 8 位寄存器，最大值为 255，若 指定为 0，则表示要操作 256 个扇区。</p>
+<p><strong>CHS</strong> : 硬盘中的扇区在物理上是用“<strong>柱面-磁头-扇区</strong>”来定位的（<strong>Cylinder Head Sector</strong>），但每 次我们要事先算出扇区是在哪个盘面，哪个柱面上，这太麻烦了，这对于磁头来说很直观，它就是根据这些信息来定位扇区的。这就引出了<strong>LBA</strong>。。。</p>
+<p><strong>LBA 的定义 **: 一种逻辑上为扇区址的方法，全称为</strong>逻辑块地址<strong>（Logical Block Address）。LBA 分为两种，</strong>一种是 LBA28<strong>，用 28 位比特来描述一个扇区的地址。最大寻址范围是 2 的 28 次方等 于 268435456 个扇区，每个扇区是 512 字节，最大支持 128GB。 **另外一种是 LBA48</strong>，用 48 位比特来描述一个扇区的地址，最大可寻址范围是 2 的 48 次方， 等于 281474976710656 个扇区，乘以 512 字节后，最大支持 131072TB，即 128PB。</p>
+<p><strong>LBA 寄存器</strong> ：<strong>LBA low、LBA mid、LBA high</strong>（8位）。LBA low 寄存器用来存储 28 位地址的第 <strong>0～7</strong> 位，LBA mid 寄存器用来存储第 <strong>8～15</strong> 位， LBA high 寄存器存储第 <strong>16～23</strong> 位。</p>
+<p><strong>device 寄存器</strong> ：宽度是 8 位，它的<strong>低 4 位</strong>用来存储 <strong>LBA 地址 的第 24～27 位</strong>。结合上面的三个 LBA 寄存器。<strong>第 4 位用来指定通道上的主盘或从盘</strong>，0 代表主盘，1 代表从盘。<strong>第 6 位用来设置是否启用 LBA 方式</strong>，1 代表启用 <strong>LBA</strong> 模式，0 代表启用 <strong>CHS</strong> 模式。另外的两位： <strong>第 5 位和第 7 位</strong>是固定为 1 的，称为 <strong>MBS</strong> 位。</p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190598497/0" alt="image-20201014210843981"></p>
+<p><strong>Status寄存器</strong> ： 在读硬盘时，端口 0x1F7 或 0x177 的寄存器（8位）。用来给出<strong>硬盘的状态信息</strong>。<strong>第 0 位是 ERR 位</strong>，如果此位为 1，表示命令出错了，具体原因可见 error 寄存器。<strong>第 3 位是 data request 位</strong>，如果此位为 1，表示硬盘已经把数据准备好了，主机现在可以把数据读出来。<strong>第 6 位是 DRDY</strong>， 表示硬盘就绪，此位是在对硬盘诊断时用的，表示硬盘检测正常，可以继续执行一些命令。<strong>第 7 位是 BSY 位</strong>，表示硬盘是否繁忙，如果为 1 表示硬盘正忙着，此寄存器中的其他位都无效。另外的 4 位暂不关注。</p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190598515/0" alt="image-20201014210935449"></p>
+<p><strong>command寄存器</strong> ： 在写硬盘时，端口 0x1F7 或 0x177 的寄存器。它和 <strong>status 寄存器</strong>是同一个。此寄存器用来<strong>存储让硬盘执行的命令</strong>，只要把命令写进此寄存器，硬盘就开始工作了</p>
+<p>我们系统主要执行3个命令（ 感兴趣的 可以去看 ATA 手册</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">（1）identify：0xEC，即硬盘识别。</span><br><span class="line">（2）read sector：0x20，即读扇区。</span><br><span class="line">（3）write sector：0x30，即写扇区。</span><br></pre></td></tr></table></figure>
+
+<p>总结下寄存器 <strong>error、feature</strong> 和 <strong>status、command</strong>，大家可以这样来助记：这两组都是同一寄存器（也就是同一端口）多个用途，对同一端口写操作时，硬盘控制器认为这是个命令，对同一端口读操作时，硬盘控制器认为是想获得状态。</p>
+<h3 id="常用的硬盘操作方法"><a href="#常用的硬盘操作方法" class="headerlink" title="常用的硬盘操作方法"></a><strong>常用的硬盘操作方法</strong></h3><p>最主要的顺序就是 command 寄 存器一定得是最后写，因为一旦 command 寄存器被写入后，硬盘就开始干活啦，它才不管其他寄存器中 的值对不对，一律拿来就用，有问题的话报错就好啦。其他寄存器顺序不是很重要。</p>
+<p><em>（1）先选择通道，往该通道的 sector count 寄存器中写入待操作的扇区数。</em><br><em>（2）往该通道上的三个 LBA 寄存器写入扇区起始地址的低 24 位。</em><br><em>（3）往 device 寄存器中写入 LBA 地址的 24～27 位，并置第 6 位为 1，使其为 LBA 模式，设置第 4位，选择操作的硬盘（master 硬盘或 slave 硬盘）。</em><br><em>（4）往该通道上的 command 寄存器写入操作命令。</em><br><em>（5）读取该通道上的 status 寄存器，判断硬盘工作是否完成。</em><br><em>（6）如果以上步骤是读硬盘，进入下一个步骤。否则，完工。</em><br><em>（7）将硬盘数据读出。</em></p>
+<p>硬盘工作完成后，它已经准备好了数据，咱们该怎么获取呢？一般常用的数据传送方式如下。</p>
+<p><em>（1）无条件传送方式。</em><br><em>（2）查询传送方式。</em><br><em>（3）中断传送方式。</em><br><em>（4）直接存储器存取方式（DMA）。</em><br><em>（5）I/O 处理机传送方式。</em></p>
+<p><strong>第 1 种 “无条件传送方式”</strong>，应用此方式的数据源设备一定是随时准备好了数据，CPU 随时取随时拿都没问题，如寄存器、内存就是类似这样的设备，CPU 取数据时不用提前打招呼。 </p>
+<p><strong>第 2 种 “查询传送方式”</strong>，也称为程序 I/O、PIO（Programming Input/Output Model），是指传输之前， 由程序先去检测设备的状态。数据源设备在一定的条件下才能传送数据，这类设备通常是低速设备，比 CPU 慢很多。CPU 需要数据时，先检查该设备的状态，如果状态为“准备好了可以发送”，CPU 再去获取数据。硬盘有 status 寄存器，里面保存了工作状态，所以对硬盘可以用此方式来获取数据。 </p>
+<p><strong>第 3 种 “中断传送方式”</strong>，也称为中断驱动 I/O。上面提到的“查询传送方式”有这样的缺陷，由于 CPU 需要不断查询设备状态，所以意味着只有最后一刻的查询才是有意义的，之前的查询都是发生在数据尚未准 备好的时间段里，所以说效率不高，仅对于不要求速度的系统可以采用。可以改进的地方是如果数据源设备将数据准备好后再通知 CPU 来取，这样效率就高了。通知 CPU 可以采用中断的方式，当数据源设备准备好 数据后，它通过发中断来通知 CPU 来拿数据，这样避免了 CPU 花在查询上的时间，效率较高。</p>
+<p> <strong>第 4 种 “直接存储器存取方式（DMA）”</strong>。在中断传送方式中，虽然极大地提高了 CPU 的利用率，但通过中断方式来通知 CPU，CPU 就要通过压栈来保护现场，还要执行传输指令，最后还要恢复现场。没有浪费 CPU 资源，不让 CPU 参与传输，完全由数据源设备和内存直接传输。CPU 直接到内存中拿数据就好了。这就是此方式中“直接”的意思。不过 DMA 是由硬件实现的，不是软件概念，所以需要 DMA 控制器才行。</p>
+<p> <strong>第 5 种 “I/O 处理机传送方式”</strong>。不知大家发现了没有，在说上面每一种的时候都把它们各自说得特别好，似乎完美不可替代了。DMA 已经借助其他硬件了，CPU 已经很轻松了，难道还有更爽的方式？是啊，DMA 方式中 CPU 还嫌爽的不够，毕竟数据输入之后或输出之前还是有一部分工作要由 CPU 来完成的，如数据交换、组合、校验等。 如果 DMA 控制器再强大一点，把这些工作帮 CPU 做了就好。也是哦，既然为了解放 CPU，都已经引用一个硬件（DMA）了，干脆一不做二不休，再引入一个硬件吧。于是，I/O 处理机诞生啦，听名字就知道它专门用于处理 IO，并且它其实是一种处理器，只不过用的是另一套擅长 IO 的指令系统，随时可以处 理数据。有了 I/O 处理机的帮忙，CPU 甚至可以不知道有传输这回事，这下 CPU 才真正爽到家啦。同样， 这也是需要单独的硬件来支持。 </p>
+<p>综上所述，硬盘不符合第 1 种方法，因为它需要在某种条件下才能传输。第 4 种和第 5 种需要单独 4的硬件支持，先不说我们的 bochs 能否模拟这两种硬件，单独学习这两类硬件的操作方法就很头疼，所以我们用了第 2、3 这两种软件传输方式。</p>
+<h2 id="改造MBR"><a href="#改造MBR" class="headerlink" title="改造MBR"></a><strong>改造MBR</strong></h2><p>由于MBR 只有 512 字节，这小小的空间，着实干不了什么大事 。。。所以做个稍微大一点的改进，经过这个改进后，我们的 MBR 可以读取硬盘。</p>
+<p>这时候 <strong>loader</strong> ，即<strong>加载器</strong>出现了，它在另一个程序中完成初始化环境及加载内核的任务。</p>
+<p><strong>MBR</strong> 负责从硬盘上把 <strong>loader 加载到内存</strong></p>
+<p><strong>细节要求</strong> ： 首先 loader 中要定义一些<strong>数据结构</strong>（如 GDT 全局描述符表，不懂没关系，以后会说），这些数据结构将来的内核还是要用的，所以 loader 加载到内存后不能被覆盖。 其次，随着咱们不断添加功能，内核必然越来越大，其所在的内存地址也会向越来越高的地方发展，所以，尽量把 loader 放在低处。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br></pre></td><td class="code"><pre><span class="line"> ;主引导程序</span><br><span class="line"> ;------------------------------------------------------------</span><br><span class="line"> %include &quot;boot.inc&quot;</span><br><span class="line"> SECTION MBR vstart&#x3D;0x7c00</span><br><span class="line"> mov ax,cs</span><br><span class="line"> mov ds,ax</span><br><span class="line"> mov es,ax</span><br><span class="line"> mov ss,ax</span><br><span class="line"> mov fs,ax</span><br><span class="line"> mov sp,0x7c00</span><br><span class="line"> mov ax,0xb800</span><br><span class="line"> mov gs,ax</span><br><span class="line"></span><br><span class="line"> ;清屏</span><br><span class="line"> ;利用 0x06 号功能，上卷全部行，则可清屏</span><br><span class="line"> ; -----------------------------------------------------------</span><br><span class="line"> ;INT 0x10 功能号：0x06 功能描述：上卷窗口</span><br><span class="line"> ;------------------------------------------------------</span><br><span class="line"> ;输入：</span><br><span class="line"> ;AH 功能号&#x3D; 0x06</span><br><span class="line"> ;AL &#x3D; 上卷的行数（如果为 0，表示全部）</span><br><span class="line"> ;BH &#x3D; 上卷行属性</span><br><span class="line"> ;(CL,CH) &#x3D; 窗口左上角的(X,Y)位置</span><br><span class="line"> ;(DL,DH) &#x3D; 窗口右下角的(X,Y)位置</span><br><span class="line"> ;无返回值：</span><br><span class="line"> mov ax, 0600h</span><br><span class="line"> mov bx, 0700h</span><br><span class="line"> mov cx, 0 ; 左上角: (0, 0)</span><br><span class="line"> mov dx, 184fh ; 右下角: (80,25),</span><br><span class="line"> ; 因为 VGA 文本模式中，一行只能容纳 80 个字符，共 25 行</span><br><span class="line"> ; 下标从 0 开始，所以 0x18&#x3D;24，0x4f&#x3D;79</span><br><span class="line"> int 10h ; int 10h</span><br><span class="line"></span><br><span class="line"> ; 输出字符串:MBR</span><br><span class="line"> mov byte [gs:0x00],&#39;1&#39;</span><br><span class="line"> mov byte [gs:0x01],0xA4</span><br><span class="line"></span><br><span class="line"> mov byte [gs:0x02],&#39; &#39;</span><br><span class="line"> mov byte [gs:0x03],0xA4</span><br><span class="line"></span><br><span class="line"> mov byte [gs:0x04],&#39;M&#39;</span><br><span class="line"> mov byte [gs:0x05],0xA4</span><br><span class="line">;A 表示绿色背景闪烁,4 表示前景色为红色</span><br><span class="line"> </span><br><span class="line"> mov byte [gs:0x06],&#39;B&#39;</span><br><span class="line"> mov byte [gs:0x07],0xA4</span><br><span class="line"></span><br><span class="line"> mov byte [gs:0x08],&#39;R&#39;</span><br><span class="line"> mov byte [gs:0x09],0xA4</span><br><span class="line"> </span><br><span class="line"> mov eax,LOADER_START_SECTOR ; 起始扇区 lba 地址</span><br><span class="line"> mov bx,LOADER_BASE_ADDR ; 写入的地址</span><br><span class="line"> mov cx,1 ; 待读入的扇区数</span><br><span class="line"> call rd_disk_m_16 ; 以下读取程序的起始部分(一个扇区)</span><br><span class="line"></span><br><span class="line"> jmp LOADER_BASE_ADDR</span><br><span class="line"></span><br><span class="line"> ;-------------------------------------------------------------------------------</span><br><span class="line"> ;功能:读取硬盘 n 个扇区</span><br><span class="line"> rd_disk_m_16:</span><br><span class="line"> ;-------------------------------------------------------------------------------</span><br><span class="line"> ; eax&#x3D;LBA 扇区号</span><br><span class="line"> ; bx&#x3D;将数据写入的内存地址</span><br><span class="line"> ; cx&#x3D;读入的扇区数</span><br><span class="line"> mov esi,eax ;备份 eax</span><br><span class="line"> mov di,cx ;备份 cx</span><br><span class="line"> ;读写硬盘:</span><br><span class="line"> ;第 1 步:设置要读取的扇区数</span><br><span class="line"> mov dx,0x1f2</span><br><span class="line"> mov al,cl</span><br><span class="line"> out dx,al ;读取的扇区数</span><br><span class="line"></span><br><span class="line"> mov eax,esi ;恢复 ax</span><br><span class="line"></span><br><span class="line"> ;第 2 步:将 LBA 地址存入 0x1f3 ～ 0x1f6</span><br><span class="line"></span><br><span class="line"> ;LBA 地址 7～0 位写入端口 0x1f3</span><br><span class="line"> mov dx,0x1f3</span><br><span class="line"> out dx,al</span><br><span class="line"></span><br><span class="line"> ;LBA 地址 15～8 位写入端口 0x1f4</span><br><span class="line"> mov cl,8</span><br><span class="line"> shr eax,cl</span><br><span class="line"> mov dx,0x1f4</span><br><span class="line"> out dx,al</span><br><span class="line"> </span><br><span class="line"> ;LBA 地址 23～16 位写入端口 0x1f5</span><br><span class="line"> shr eax,cl</span><br><span class="line"> mov dx,0x1f5</span><br><span class="line"> out dx,al</span><br><span class="line"></span><br><span class="line"> shr eax,cl</span><br><span class="line"> and al,0x0f ;lba 第 24～27 位</span><br><span class="line"> or al,0xe0 ; 设置 7～4 位为 1110,表示 lba 模式</span><br><span class="line"> mov dx,0x1f6</span><br><span class="line"> out dx,al</span><br><span class="line">  </span><br><span class="line"> ;第 3 步:向 0x1f7 端口写入读命令,0x20</span><br><span class="line"> mov dx,0x1f7</span><br><span class="line"> mov al,0x20</span><br><span class="line"> out dx,al</span><br><span class="line"></span><br><span class="line"> ;第 4 步:检测硬盘状态</span><br><span class="line"> .not_ready:</span><br><span class="line"> ;同一端口,写时表示写入命令字,读时表示读入硬盘状态</span><br><span class="line"> nop</span><br><span class="line"> in al,dx</span><br><span class="line"> and al,0x88 ;第 4 位为 1 表示硬盘控制器已准备好数据传输</span><br><span class="line"> ;第 7 位为 1 表示硬盘忙</span><br><span class="line"> cmp al,0x08</span><br><span class="line"> jnz .not_ready ;若未准备好,继续等</span><br><span class="line"></span><br><span class="line"> ;第 5 步:从 0x1f0 端口读数据</span><br><span class="line"> mov ax, di</span><br><span class="line"> mov dx, 256</span><br><span class="line"> mul dx</span><br><span class="line"> mov cx, ax</span><br><span class="line"> ; di 为要读取的扇区数,一个扇区有 512 字节,每次读入一个字</span><br><span class="line"> ; 共需 di*512&#x2F;2 次,所以 di*256</span><br><span class="line"> mov dx, 0x1f0</span><br><span class="line"> </span><br><span class="line"> .go_on_read:</span><br><span class="line"> in ax,dx</span><br><span class="line"> mov [bx],ax</span><br><span class="line"> add bx,2</span><br><span class="line"> loop .go_on_read</span><br><span class="line"> ret</span><br><span class="line"></span><br><span class="line"> times 510-($-$$) db 0</span><br><span class="line"> db 0x55,0xaa</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">汇编语言中，CPU对外设的操作通过专门的端口读写指令来完成；</span><br><span class="line">读端口用IN指令，写端口用OUT指令。</span><br><span class="line">例子如下：</span><br><span class="line">IN AL,21H；表示从21H端口读取一字节数据到AL</span><br><span class="line">IN AX,21H；表示从端口地址21H读取1字节数据到AL，从端口地址22H读取1字节到AH</span><br><span class="line">MOV DX,379H</span><br><span class="line">IN AL,DX ；从端口379H读取1字节到AL</span><br><span class="line">OUT 21H,AL；将AL的值写入21H端口</span><br><span class="line">OUT 21H,AX；将AX的值写入端口地址21H开始的连续两个字节。（port[21H]&#x3D;AL,port[22h]&#x3D;AH）</span><br><span class="line">MOV DX,378H</span><br><span class="line">OUT DX,AX ；将AH和AL分别写入端口379H和378H</span><br></pre></td></tr></table></figure>
+
+<p>boot.inc 是我们的配置文件，我们目前关于加载器的配置信息就写在里面。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">;------------- loader 和 kernel ----------</span><br><span class="line">LOADER_BASE_ADDR equ 0x900</span><br><span class="line">LOADER_START_SECTOR equ 0x2</span><br></pre></td></tr></table></figure>
+
+<p>编译 写入虚拟硬盘</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">添加个库目录 + 编译</span><br><span class="line">--nasm -I include&#x2F; -o mbr.bin mbr.S  </span><br><span class="line">下面将生成的 mbr.bin 写入我们的虚拟硬盘，还是用 dd 命令。</span><br><span class="line">--sudo dd if&#x3D;&#x2F;your_path&#x2F;mbr.bin of&#x3D;&#x2F;your_path&#x2F;bochs&#x2F;hd60M.img bs&#x3D;512 count&#x3D;1 conv&#x3D;notrunc</span><br><span class="line">--sudo dd if&#x3D;&#x2F;home&#x2F;fyz&#x2F;sc&#x2F;bochs-2.6.2&#x2F;mbr.bin of&#x3D;&#x2F;home&#x2F;fyz&#x2F;sc&#x2F;bochs-2.6.2&#x2F;hd60M.img bs&#x3D;512 count&#x3D;1 conv&#x3D;notrunc</span><br></pre></td></tr></table></figure>
+
+<p>我们先不要运行 因为我们 loader 还没写，若此时执行此 MBR，CPU 会直接跳到 0x900 的地方。。。</p>
+<p><strong>现在我们开始写 loader</strong> </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">;loader.S</span><br><span class="line">%include &quot;boot.inc&quot; </span><br><span class="line">section loader vstart&#x3D;LOADER_BASE_ADDR </span><br><span class="line"></span><br><span class="line">mov byte [gs:0x00],&#39;2&#39;</span><br><span class="line">mov byte [gs:0x01],0xA4 ; A 表示绿色背景闪烁，4 表示前景色为红色</span><br><span class="line"></span><br><span class="line">mov byte [gs:0x02],&#39; &#39;</span><br><span class="line">mov byte [gs:0x03],0xA4</span><br><span class="line"></span><br><span class="line">mov byte [gs:0x04],&#39;L&#39;</span><br><span class="line">mov byte [gs:0x05],0xA4</span><br><span class="line"></span><br><span class="line">mov byte [gs:0x06],&#39;O&#39;</span><br><span class="line">mov byte [gs:0x07],0xA4</span><br><span class="line"></span><br><span class="line">mov byte [gs:0x08],&#39;A&#39;</span><br><span class="line">mov byte [gs:0x09],0xA4</span><br><span class="line"></span><br><span class="line">mov byte [gs:0x0a],&#39;D&#39;</span><br><span class="line">mov byte [gs:0x0b],0xA4</span><br><span class="line"></span><br><span class="line">mov byte [gs:0x0c],&#39;E&#39;</span><br><span class="line">mov byte [gs:0x0d],0xA4</span><br><span class="line"></span><br><span class="line">mov byte [gs:0x0e],&#39;R&#39;</span><br><span class="line">mov byte [gs:0x0f],0xA4</span><br><span class="line"></span><br><span class="line">jmp $ ; 通过死循环使程序悬停在此</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">添加个库目录 + 编译</span><br><span class="line">--nasm -I include&#x2F; -o loader.bin loader.S</span><br><span class="line">将生成的 loader.bin 写入硬盘第 2 个扇区。第 0 个扇区是 MBR，第 1 个扇区是空的未使用。（ 我就喜欢 你咋的</span><br><span class="line">--sudo dd if&#x3D;.&#x2F;loader.bin of&#x3D;&#x2F;your_path&#x2F;bochs&#x2F;hd60M.img bs&#x3D;512 count&#x3D;1 seek&#x3D;2 conv&#x3D;notrunc</span><br><span class="line">--sudo dd if&#x3D;.&#x2F;loader.bin of&#x3D;&#x2F;home&#x2F;fyz&#x2F;sc&#x2F;bochs-2.6.2&#x2F;hd60M.img bs&#x3D;512 count&#x3D;1 seek&#x3D;2 conv&#x3D;notrunc</span><br><span class="line"></span><br><span class="line">得到</span><br><span class="line">记录了0+1 的读入</span><br><span class="line">记录了0+1 的写出</span><br><span class="line">98 bytes copied, 0.0976747 s, 1.0 kB&#x2F;s</span><br><span class="line"></span><br><span class="line">模拟</span><br><span class="line">--sudo bin&#x2F;bochs -f bochsrc.disk</span><br></pre></td></tr></table></figure>
+
+<p>已经成功运行</p>
+<p> <img src="https://inews.gtimg.com/newsapp_ls/0/13190598526/0" alt="image-20201015111210074"></p>
+
+      
+      <!-- reward -->
+      
+      <div id="reward-btn">
+        Reward
+      </div>
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+        <div class="declare">
+          <ul class="post-copyright">
+            <li>
+              <i class="ri-copyright-line"></i>
+              <strong>Copyright： </strong>
+              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+            </li>
+          </ul>
+        </div>
+        
+    <footer class="article-footer">
+      
+          
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2021/02/21/cx1/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9C%9F%E8%B1%A1%E8%BF%98%E5%8E%9F/" rel="tag">操作系统真象还原</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+  
+  <nav class="article-nav">
+    
+      <a href="/2021/02/21/cx2/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            操作系统真象还原&lt;第二部分&gt;
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2021/02/21/cx4/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">操作系统真象还原&lt;第四部分&gt;</div>
+      </a>
+    
+  </nav>
+
+
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: '',
+        app_key: '',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'mp',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+
+</article>
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul class="list-inline">
+      <li>
+        &copy;
+        2015-2021
+        John Doe
+      </li>
+      <li>
+        
+        Powered by
+        
+        
+        <a href="https://hexo.io" target="_blank">Hexo</a> Theme <a href="https://github.com/Shen-Yu/hexo-theme-ayer" target="_blank">Ayer</a>
+        
+      </li>
+    </ul>
+    <ul class="list-inline">
+      <li>
+        
+        
+        <span>
+  <i>PV:<span id="busuanzi_value_page_pv"></span></i>
+  <i>UV:<span id="busuanzi_value_site_uv"></span></i>
+</span>
+        
+      </li>
+      
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="Hexo"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="Search">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+<script>
+  try {
+    var typed = new Typed("#subtitle", {
+      strings: ['你努力，剩下的交给我', '愿你一生努力，一生被爱', '想要的都拥有，得不到的都释怀'],
+      startDelay: 0,
+      typeSpeed: 200,
+      loop: true,
+      backSpeed: 100,
+      showCursor: true
+    });
+  } catch (err) {
+  }
+
+</script>
+
+
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+
+
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+
+<script type="text/javascript" src="https://js.users.51.la/20544303.js"></script>
+
+
+    
+  </div>
+</body>
+
+</html>
